@@ -1,0 +1,1937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuklearny Polski — Polish for Nuclear Human Factors Engineers</title>
+<style>
+  :root{
+    --bg:#0f1419; --panel:#1a2129; --panel2:#212b35; --line:#2c3946;
+    --text:#e6edf3; --muted:#8b9aa8; --accent:#3fb950; --accent2:#58a6ff;
+    --warn:#f0883e; --danger:#f85149; --gold:#e3b341;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.5}
+  a{color:var(--accent2)}
+  header{background:linear-gradient(135deg,#142d1f,#0f1419);border-bottom:1px solid var(--line);
+    padding:18px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .logo{font-size:1.5rem;font-weight:800;letter-spacing:.3px}
+  .logo .atom{color:var(--accent)}
+  .tag{color:var(--muted);font-size:.85rem}
+  .who{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:.9rem}
+  .who input{background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    padding:7px 10px;border-radius:9px;font-size:.9rem;width:160px}
+  .btn{background:var(--accent);color:#06210f;border:none;padding:8px 14px;border-radius:9px;
+    font-weight:700;cursor:pointer;font-size:.88rem}
+  .btn:hover{filter:brightness(1.08)}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text);font-weight:600}
+  .btn.small{padding:5px 10px;font-size:.8rem}
+  nav.tabs{display:flex;gap:6px;padding:12px 22px 0;flex-wrap:wrap;border-bottom:1px solid var(--line);background:var(--panel)}
+  nav.tabs button{background:transparent;border:none;color:var(--muted);padding:10px 14px;
+    border-bottom:3px solid transparent;cursor:pointer;font-size:.92rem;font-weight:600}
+  nav.tabs button.active{color:var(--text);border-bottom-color:var(--accent)}
+  main{max-width:1000px;margin:0 auto;padding:24px 22px 80px}
+  .overall{display:flex;align-items:center;gap:16px;background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius);padding:16px 18px;margin-bottom:22px}
+  .ring{position:relative;width:64px;height:64px;flex:0 0 auto}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.95rem}
+  .bar{height:9px;background:var(--panel2);border-radius:6px;overflow:hidden}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+  .lesson-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px;cursor:pointer;transition:.15s;display:flex;flex-direction:column;gap:10px}
+  .lesson-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .lesson-card h3{margin:0;font-size:1.05rem}
+  .lesson-card .sub{color:var(--muted);font-size:.82rem}
+  .badge{font-size:.7rem;padding:3px 8px;border-radius:20px;font-weight:700;display:inline-block}
+  .badge.every{background:#1d3a52;color:#9cd0ff}
+  .badge.nuc{background:#3a2a14;color:#f0c089}
+  .mini-bar{height:6px;background:var(--panel2);border-radius:5px;overflow:hidden;margin-top:4px}
+  .mini-bar>i{display:block;height:100%;background:var(--accent)}
+  .crumb{color:var(--muted);font-size:.85rem;margin-bottom:6px;cursor:pointer}
+  .crumb:hover{color:var(--text)}
+  h2.title{margin:.2em 0 .1em;font-size:1.5rem}
+  .lead{color:var(--muted);margin-bottom:18px}
+  .vocab{display:flex;flex-direction:column;gap:8px}
+  .word{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;
+    display:flex;align-items:center;gap:14px}
+  .word.learned{border-color:var(--accent);background:#15241a}
+  .word .pl{font-size:1.1rem;font-weight:700;min-width:160px}
+  .word .pr{color:var(--accent2);font-size:.85rem;font-style:italic;min-width:150px}
+  .word .en{color:var(--text);flex:1}
+  .word .acts{display:flex;gap:6px;align-items:center}
+  .iconbtn{background:var(--panel2);border:1px solid var(--line);color:var(--text);width:34px;height:34px;
+    border-radius:9px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
+  .iconbtn:hover{border-color:var(--accent2)}
+  .iconbtn.on{background:var(--accent);color:#06210f;border-color:var(--accent)}
+  .row-actions{display:flex;gap:10px;margin:16px 0;flex-wrap:wrap}
+  .quiz{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+  .q-prompt{font-size:1.25rem;font-weight:700;margin-bottom:16px}
+  .opt{display:block;width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);
+    color:var(--text);padding:13px 15px;border-radius:11px;margin-bottom:10px;cursor:pointer;font-size:1rem}
+  .opt:hover{border-color:var(--accent2)}
+  .opt.correct{background:#15301c;border-color:var(--accent)}
+  .opt.wrong{background:#3a1a1a;border-color:var(--danger)}
+  .q-meta{color:var(--muted);font-size:.85rem;margin-bottom:14px}
+  .lb-table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius);overflow:hidden}
+  .lb-table th,.lb-table td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--line)}
+  .lb-table th{color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.5px}
+  .lb-table tr:last-child td{border-bottom:none}
+  .lb-table tr.me{background:#15241a}
+  .rank{font-weight:800;color:var(--gold)}
+  .note{background:var(--panel2);border:1px dashed var(--line);border-radius:12px;padding:14px 16px;
+    color:var(--muted);font-size:.88rem;margin-top:18px}
+  .note code{background:#0d1117;padding:2px 6px;border-radius:5px;color:var(--accent2)}
+  .hidden{display:none}
+  /* flashcards */
+  .fc-setup{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+  .fc-field{margin-bottom:18px}
+  .fc-field>label{display:block;color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+  .seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden;flex-wrap:wrap}
+  .seg button{background:transparent;border:none;color:var(--muted);padding:9px 14px;cursor:pointer;font-size:.9rem;font-weight:600}
+  .seg button.on{background:var(--accent);color:#06210f}
+  .fc-stage{display:flex;flex-direction:column;align-items:center;gap:18px}
+  .fc-counter{color:var(--muted);font-size:.85rem}
+  .flashcard{width:100%;max-width:460px;height:240px;perspective:1200px;cursor:pointer}
+  .flashcard .inner{position:relative;width:100%;height:100%}
+  .flashcard .face{position:absolute;inset:0;border-radius:18px;border:1px solid var(--line);
+    background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;
+    opacity:0;visibility:hidden;transition:opacity .25s ease}
+  .flashcard .front{opacity:1;visibility:visible}
+  .flashcard.flipped .front{opacity:0;visibility:hidden}
+  .flashcard.flipped .back{opacity:1;visibility:visible}
+  .flashcard .face .term{font-size:1.9rem;font-weight:800}
+  .flashcard .face .pr{color:var(--accent2);font-style:italic;font-size:1rem}
+  .flashcard .face .hint{position:absolute;bottom:14px;color:var(--muted);font-size:.78rem}
+  .flashcard .fc-speak{background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    width:46px;height:46px;border-radius:50%;cursor:pointer;font-size:1.3rem;display:flex;
+    align-items:center;justify-content:center;margin-top:4px}
+  .flashcard .fc-speak:hover{border-color:var(--accent);background:#15241a}
+  .flashcard .face .side{position:absolute;top:14px;left:16px;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px}
+  .flashcard .back{background:var(--panel2)}
+  .fc-grade{display:flex;gap:12px;width:100%;max-width:460px}
+  .fc-grade button{flex:1;padding:15px;border-radius:12px;border:none;font-weight:800;font-size:1rem;cursor:pointer}
+  .fc-grade .miss{background:#3a1a1a;color:#f8a9a4;border:1px solid var(--danger)}
+  .fc-grade .miss:hover{background:#4a2020}
+  .fc-grade .got{background:#15301c;color:#7ee29a;border:1px solid var(--accent)}
+  .fc-grade .got:hover{background:#1c3f26}
+  .fc-stat{display:flex;gap:18px;color:var(--muted);font-size:.82rem;flex-wrap:wrap;justify-content:center}
+  .fc-stat b{color:var(--text)}
+  .due-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
+  .due-chip{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:.82rem}
+  .due-chip b{display:block;font-size:1.4rem;color:var(--accent)}
+  /* pronunciation */
+  .snd-keyfacts{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:8px 0 26px}
+  .snd-keyfacts .kf{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .snd-keyfacts .kf b{display:block;color:var(--accent);font-size:.95rem;margin-bottom:4px}
+  .snd-keyfacts .kf span{color:var(--muted);font-size:.86rem}
+  .snd-sec{margin:26px 0}
+  .snd-sec h3{margin:0 0 4px;font-size:1.2rem}
+  .snd-sec .blurb{color:var(--muted);font-size:.9rem;margin:0 0 14px;max-width:760px}
+  .snd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+  .snd-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;
+    display:flex;gap:14px;align-items:flex-start;cursor:pointer;transition:.15s}
+  .snd-card:hover{border-color:var(--accent2);transform:translateY(-2px)}
+  .snd-letter{font-size:2rem;font-weight:800;line-height:1;min-width:46px;text-align:center;color:var(--text)}
+  .snd-letter .ipa{display:block;color:var(--muted);font-size:.72rem;font-weight:600;margin-top:6px;font-style:italic}
+  .snd-body{flex:1;min-width:0}
+  .snd-approx{font-weight:700;font-size:.95rem;margin-bottom:3px}
+  .snd-approx em{color:var(--accent2);font-style:normal}
+  .snd-ex{color:var(--muted);font-size:.85rem}
+  .snd-ex .w{color:var(--text);font-weight:700}
+  .snd-play{background:var(--panel2);border:1px solid var(--line);color:var(--text);width:36px;height:36px;
+    border-radius:9px;cursor:pointer;font-size:1rem;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+  .snd-play:hover{border-color:var(--accent);background:#15241a}
+  .snd-pair{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px;
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .snd-pair .eq{font-weight:800;font-size:1.15rem;color:var(--gold)}
+  .snd-pair .lbl{font-size:1.3rem;font-weight:800}
+  .snd-pair .desc{color:var(--muted);font-size:.85rem;flex:1;min-width:160px}
+  .snd-note{background:var(--panel2);border:1px dashed var(--line);border-radius:12px;padding:14px 16px;
+    color:#cdd9e3;font-size:.9rem;margin-top:6px;line-height:1.6}
+  .snd-note b{color:var(--accent)}
+  .snd-note code{background:#0d1117;padding:1px 6px;border-radius:5px;color:var(--accent2);font-weight:700}
+  .snd-twist{background:var(--panel);border-left:3px solid var(--accent);border-radius:0 12px 12px 0;padding:16px 18px;margin-top:8px}
+  .snd-twist .pl{font-size:1.2rem;font-weight:700;font-style:italic;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .snd-twist .en{color:var(--muted);margin-top:8px}
+  /* speaking practice */
+  .sp-chat{display:flex;flex-direction:column;gap:12px;margin:18px 0;min-height:40px}
+  .sp-bubble{max-width:80%;padding:12px 15px;border-radius:16px;line-height:1.45}
+  .sp-bubble .pl{font-size:1.05rem;font-weight:700}
+  .sp-bubble .pr{color:var(--accent2);font-style:italic;font-size:.82rem;margin-top:3px}
+  .sp-bubble .en{color:var(--muted);font-size:.85rem;margin-top:4px}
+  .sp-bubble .spk{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:.95rem;padding:0;margin-top:6px}
+  .sp-bubble .spk:hover{color:var(--accent2)}
+  .sp-agent{align-self:flex-start;background:var(--panel);border:1px solid var(--line);border-bottom-left-radius:4px}
+  .sp-you{align-self:flex-end;background:#15241a;border:1px solid var(--accent);border-bottom-right-radius:4px}
+  .sp-you.partial{background:#3a2f12;border-color:var(--gold)}
+  .sp-you .heard{color:var(--muted);font-size:.8rem;margin-top:5px;font-style:italic}
+  .sp-you .scorechip{font-size:.72rem;font-weight:800;padding:2px 8px;border-radius:20px;margin-top:6px;display:inline-block}
+  .sp-panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-top:6px}
+  .sp-prompt-label{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+  .sp-en{font-size:1.2rem;font-weight:700;margin-bottom:6px}
+  .sp-hint{background:var(--panel2);border:1px dashed var(--line);border-radius:10px;padding:10px 13px;margin-bottom:12px}
+  .sp-hint .pl{font-size:1.1rem;font-weight:700}
+  .sp-hint .pr{color:var(--accent2);font-style:italic;font-size:.85rem;margin-top:3px}
+  .sp-mic-row{display:flex;align-items:center;gap:16px;margin:8px 0}
+  .sp-mic{width:64px;height:64px;border-radius:50%;border:1px solid var(--line);background:var(--panel2);
+    color:var(--text);font-size:1.7rem;cursor:pointer;flex:0 0 auto;transition:.15s;display:flex;align-items:center;justify-content:center}
+  .sp-mic:hover{border-color:var(--accent)}
+  .sp-mic.listening{background:var(--danger);border-color:var(--danger);animation:sp-pulse 1.1s infinite}
+  @keyframes sp-pulse{0%{box-shadow:0 0 0 0 rgba(248,81,73,.5)}70%{box-shadow:0 0 0 14px rgba(248,81,73,0)}100%{box-shadow:0 0 0 0 rgba(248,81,73,0)}}
+  .sp-status{color:var(--muted);font-size:.9rem}
+  .sp-feedback{border-radius:12px;padding:12px 15px;margin:8px 0 4px;font-size:.95rem}
+  .sp-feedback.great{background:#15301c;border:1px solid var(--accent);color:#7ee29a}
+  .sp-feedback.close{background:#3a2f12;border:1px solid var(--gold);color:#e3c264}
+  .sp-feedback.again{background:#3a1a1a;border:1px solid var(--danger);color:#f8a9a4}
+  .sp-feedback b{color:var(--text)}
+  .sp-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .sp-selfgrade{margin-top:10px}
+  .sp-card-cat{margin-bottom:2px}
+  /* word list */
+  .wl-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .wl-controls input{background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    padding:9px 12px;border-radius:9px;font-size:.9rem;flex:1;min-width:180px}
+  .wl-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .wl-chip{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:8px 13px;
+    border-radius:20px;cursor:pointer;font-size:.85rem;font-weight:600;display:flex;align-items:center;gap:7px}
+  .wl-chip:hover{border-color:var(--accent2)}
+  .wl-chip.on{border-color:var(--text)}
+  .wl-chip .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .wl-chip .n{color:var(--muted);font-weight:700}
+  .dot.notstarted{background:#8b9aa8} .dot.struggle{background:#f85149}
+  .dot.learning{background:#e3b341} .dot.mastered{background:#3fb950} .dot.all{background:var(--accent2)}
+  .status{padding:4px 11px;border-radius:20px;font-size:.76rem;font-weight:700;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+  .status .dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+  .status.notstarted{background:#2a323b;color:#aab6c2}
+  .status.struggle{background:#3a1a1a;color:#f8a9a4}
+  .status.learning{background:#3a2f12;color:#e3c264}
+  .status.mastered{background:#15301c;color:#7ee29a}
+  .wl-table td .pr{color:var(--accent2);font-style:italic;font-size:.82rem}
+  .wl-table .acc{color:var(--muted);font-size:.82rem}
+  .wl-empty{color:var(--muted);padding:24px;text-align:center}
+  .lb-table th.sortable{cursor:pointer;user-select:none}
+  .lb-table th.sortable:hover{color:var(--text)}
+  .lb-table th .arrow{color:var(--accent);font-weight:800}
+  /* history */
+  .hist{max-width:760px}
+  .hist h3{margin:28px 0 6px;font-size:1.15rem}
+  .hist p{color:#cdd9e3;margin:8px 0}
+  .hist .era{color:var(--accent);font-size:.78rem;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-top:26px}
+  .quote{background:var(--panel);border-left:3px solid var(--accent);border-radius:0 12px 12px 0;
+    padding:16px 18px;margin:16px 0}
+  .quote .pl{font-size:1.25rem;font-weight:700;font-style:italic}
+  .quote .en{color:var(--muted);margin-top:6px}
+  .quote .src{color:var(--muted);font-size:.8rem;margin-top:8px}
+  .factbox{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+  .factbox div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .factbox b{display:block;color:var(--accent);font-size:1.3rem}
+  .factbox span{color:var(--muted);font-size:.82rem}
+  .pill-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  footer{text-align:center;color:var(--muted);font-size:.8rem;padding:24px}
+  /* account / sign-in */
+  .gbtn{display:inline-flex;align-items:center;gap:8px;background:#fff;color:#1f1f1f;border:1px solid #dadce0;
+    padding:7px 13px;border-radius:9px;font-weight:600;font-size:.86rem;cursor:pointer}
+  .gbtn:hover{background:#f5f5f5}
+  .gbtn svg{width:16px;height:16px}
+  .userchip{display:inline-flex;align-items:center;gap:9px;background:var(--panel2);border:1px solid var(--line);
+    padding:5px 8px 5px 6px;border-radius:22px;font-size:.86rem}
+  .userchip img{width:26px;height:26px;border-radius:50%;object-fit:cover}
+  .userchip #userName{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lb-eng{display:inline-flex;align-items:center;gap:10px}
+  .lb-ava{width:26px;height:26px;border-radius:50%;object-fit:cover;flex:0 0 auto}
+  .lb-ava-blank{background:var(--panel2);border:1px solid var(--line)}
+  @media(max-width:640px){.word{flex-wrap:wrap}.word .pl,.word .pr{min-width:0}.who input{width:120px}
+    .userchip #userName{max-width:90px}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="logo"><span class="atom">⚛</span> Nuklearny Polski</div>
+    <div class="tag">Polish for nuclear power-plant Human Factors Engineers</div>
+  </div>
+  <div class="who">
+    <span id="greet" class="tag"></span>
+    <input id="nameInput" placeholder="Your name…" maxlength="24">
+    <button class="btn small" id="saveName">Save</button>
+    <button class="gbtn hidden" id="signInBtn">
+      <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Sign in with Google
+    </button>
+    <span class="userchip hidden" id="userChip">
+      <img id="userPhoto" alt="" referrerpolicy="no-referrer">
+      <span id="userName"></span>
+      <button class="btn ghost small" id="signOutBtn">Sign out</button>
+    </span>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button data-tab="about">About</button>
+  <button data-tab="history">History</button>
+  <button data-tab="sounds">Pronunciation</button>
+  <button data-tab="words">Word list</button>
+  <button data-tab="flashcards">Flashcards</button>
+  <button data-tab="lessons" class="active">Lessons</button>
+  <button data-tab="speak">Speaking</button>
+  <button data-tab="leaderboard">Team progress</button>
+</nav>
+
+<main>
+  <!-- LESSONS LIST -->
+  <section id="view-lessons">
+    <div class="overall">
+      <div class="ring">
+        <svg width="64" height="64"><circle cx="32" cy="32" r="27" stroke="#212b35" stroke-width="8" fill="none"/>
+          <circle id="ringFg" cx="32" cy="32" r="27" stroke="#3fb950" stroke-width="8" fill="none"
+            stroke-linecap="round" stroke-dasharray="170" stroke-dashoffset="170"/></svg>
+        <div class="pct" id="ringPct">0%</div>
+      </div>
+      <div style="flex:1">
+        <div style="font-weight:700;margin-bottom:4px">Your overall progress</div>
+        <div class="bar"><i id="overallBar" style="width:0%"></i></div>
+        <div class="tag" id="overallText" style="margin-top:6px">0 of 0 words learned</div>
+      </div>
+    </div>
+    <div class="grid" id="lessonGrid"></div>
+  </section>
+
+  <!-- SINGLE LESSON -->
+  <section id="view-lesson" class="hidden">
+    <div class="crumb" id="backToLessons">← All lessons</div>
+    <h2 class="title" id="lessonTitle"></h2>
+    <p class="lead" id="lessonDesc"></p>
+    <div class="row-actions">
+      <button class="btn" id="startQuiz">Take the quiz</button>
+      <button class="btn ghost small" id="markAllLearned">Mark all learned</button>
+      <button class="btn ghost small" id="resetLesson">Reset this lesson</button>
+    </div>
+    <div class="vocab" id="vocabList"></div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="view-quiz" class="hidden">
+    <div class="crumb" id="backFromQuiz">← Back to lesson</div>
+    <div class="quiz" id="quizBox"></div>
+  </section>
+
+  <!-- FLASHCARDS: SETUP -->
+  <section id="view-flashcards" class="hidden">
+    <h2 class="title">Flashcards</h2>
+    <p class="lead">Self-graded spaced repetition. Be honest: words you miss come back soon, words you know
+      drift further apart — so over time you mostly see what you're still learning.</p>
+    <div class="fc-setup">
+      <div class="fc-field">
+        <label>Deck</label>
+        <div class="seg" id="fcDeck"></div>
+      </div>
+      <div class="fc-field">
+        <label>Show first</label>
+        <div class="seg" id="fcDir">
+          <button data-dir="pl" class="on">Polish → English</button>
+          <button data-dir="en">English → Polish</button>
+          <button data-dir="mix">Mixed</button>
+        </div>
+      </div>
+      <div class="fc-field">
+        <label>Session</label>
+        <div class="seg" id="fcMode">
+          <button data-mode="due" class="on">Due now</button>
+          <button data-mode="all">Practice all</button>
+        </div>
+      </div>
+      <div class="fc-field">
+        <label>Session length</label>
+        <div class="seg" id="fcLimitType" style="margin-bottom:10px">
+          <button data-limittype="none" class="on">No limit</button>
+          <button data-limittype="cards">By cards</button>
+          <button data-limittype="time">By time</button>
+        </div>
+        <div class="seg" id="fcLimitVal"></div>
+      </div>
+      <div class="row-actions">
+        <button class="btn" id="fcStart">Start session</button>
+      </div>
+      <div class="fc-field" style="margin-bottom:0">
+        <label>What's due today</label>
+        <div class="due-grid" id="fcDue"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLASHCARDS: STAGE -->
+  <section id="view-fcstage" class="hidden">
+    <div class="crumb" id="fcBack">← Flashcard options</div>
+    <div class="fc-stage">
+      <div class="fc-counter" id="fcCounter"></div>
+      <div class="flashcard" id="fcCard">
+        <div class="inner">
+          <div class="face front">
+            <div class="side" id="fcFrontSide"></div>
+            <div class="term" id="fcFront"></div>
+            <div class="pr" id="fcFrontPr"></div>
+            <button class="fc-speak hidden" id="fcFrontSpeak" title="Hear it in Polish">🔊</button>
+            <div class="hint">Tap to flip</div>
+          </div>
+          <div class="face back">
+            <div class="side" id="fcBackSide"></div>
+            <div class="term" id="fcBackTerm"></div>
+            <div class="pr" id="fcBackPr"></div>
+            <button class="fc-speak hidden" id="fcBackSpeak" title="Hear it in Polish">🔊</button>
+            <div class="hint">Did you get it right?</div>
+          </div>
+        </div>
+      </div>
+      <div class="fc-grade hidden" id="fcGrade">
+        <button class="miss" id="fcMiss">✗ Missed it</button>
+        <button class="got" id="fcGot">✓ Got it</button>
+      </div>
+      <div class="fc-stat" id="fcStat"></div>
+    </div>
+  </section>
+
+  <!-- PRONUNCIATION -->
+  <section id="view-sounds" class="hidden">
+    <h2 class="title">Pronunciation — every Polish sound</h2>
+    <p class="lead">Good news: Polish spelling is highly regular. Once you know what each letter and letter-combination
+      sounds like, you can pronounce almost any word on sight. Tap 🔊 on any card to hear a real example.</p>
+    <div class="snd-keyfacts" id="sndKeyfacts"></div>
+    <div id="sndSections"></div>
+  </section>
+
+  <!-- SPEAKING: SETUP -->
+  <section id="view-speak" class="hidden">
+    <h2 class="title">Speaking practice</h2>
+    <p class="lead">Have a short spoken conversation with a virtual Polish partner. It says a line out loud,
+      then it's your turn — speak your reply in Polish and your browser listens and scores how close you were.
+      Pick a situation to begin.</p>
+    <div class="note" id="spSupport" style="margin-top:0;margin-bottom:18px"></div>
+    <div class="pill-row">
+      <span class="badge every">Everyday Polish</span>
+      <span class="badge nuc">Nuclear / Human Factors</span>
+    </div>
+    <div class="grid" id="spGrid"></div>
+  </section>
+
+  <!-- SPEAKING: STAGE -->
+  <section id="view-speakstage" class="hidden">
+    <div class="crumb" id="spBack">← All situations</div>
+    <h2 class="title" id="spTitle"></h2>
+    <p class="lead" id="spDesc"></p>
+    <div class="sp-chat" id="spChat"></div>
+    <div class="sp-panel hidden" id="spPanel">
+      <div class="sp-prompt-label">Your line — say it in Polish:</div>
+      <div class="sp-en" id="spEn"></div>
+      <div class="sp-hint hidden" id="spHint"></div>
+      <div class="sp-mic-row">
+        <button class="sp-mic" id="spMic" title="Hold to speak / tap to start">🎙️</button>
+        <div class="sp-status" id="spStatus">Tap the mic and say your line</div>
+      </div>
+      <div class="sp-feedback hidden" id="spFeedback"></div>
+      <div class="sp-actions">
+        <button class="btn ghost small" id="spHintBtn">Show answer</button>
+        <button class="btn ghost small" id="spHearBtn">🔊 Hear it</button>
+        <button class="btn ghost small" id="spSkipBtn">Skip →</button>
+        <button class="btn small hidden" id="spNextBtn">Continue →</button>
+      </div>
+    </div>
+    <div class="sp-selfgrade hidden" id="spSelf">
+      <div class="sp-actions">
+        <button class="btn ghost small" id="spSelfMiss">Need more practice</button>
+        <button class="btn small" id="spSelfGot">✓ Got it — continue</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEADERBOARD -->
+  <section id="view-leaderboard" class="hidden">
+    <h2 class="title">Team progress</h2>
+    <p class="lead">Everyone learning Polish on the project, ranked by words mastered.</p>
+    <table class="lb-table">
+      <thead><tr><th>#</th><th>Engineer</th><th>Words learned</th><th>Quizzes passed</th><th>Progress</th></tr></thead>
+      <tbody id="lbBody"></tbody>
+    </table>
+    <div class="note" id="lbNote"></div>
+  </section>
+
+  <!-- WORD LIST -->
+  <section id="view-words" class="hidden">
+    <h2 class="title">Word list</h2>
+    <p class="lead">Every word in the course and how well you know it. Status is driven by your flashcard reviews —
+      keep practicing and watch words move from gray to green.</p>
+    <div class="wl-controls">
+      <input id="wlSearch" placeholder="Search Polish or English…">
+      <div class="seg" id="wlSort">
+        <button data-sort="lesson" class="on">By lesson</button>
+        <button data-sort="needs">Needs work first</button>
+      </div>
+    </div>
+    <div class="wl-filters" id="wlFilters"></div>
+    <table class="lb-table wl-table">
+      <thead><tr>
+        <th class="sortable" id="wlThPl">Polish <span class="arrow"></span></th>
+        <th class="sortable" id="wlThEn">English <span class="arrow"></span></th>
+        <th>Lesson</th><th>Accuracy</th><th>Status</th>
+      </tr></thead>
+      <tbody id="wlBody"></tbody>
+    </table>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="view-history" class="hidden">
+    <div class="hist">
+      <h2 class="title">A short history of the Polish language</h2>
+      <p class="lead">Polish (<em>język polski</em>) is one of the world's major Slavic languages — and a
+        thousand-year story of a tongue that refused to disappear.</p>
+
+      <div class="factbox">
+        <div><b>~45M</b><span>native speakers worldwide</span></div>
+        <div><b>966</b><span>Christianization brings the Latin alphabet</span></div>
+        <div><b>c.1270</b><span>first full sentence written in Polish</span></div>
+        <div><b>9</b><span>extra letters: ą ć ę ł ń ó ś ź ż</span></div>
+      </div>
+
+      <div class="era">Slavic roots</div>
+      <h3>From Proto-Slavic to the Polans</h3>
+      <p>Polish belongs to the West Slavic branch of the Indo-European family, in the Lechitic group alongside
+        Kashubian and the now-extinct Polabian, and closely related to Czech, Slovak, and Sorbian. It descends from
+        Proto-Slavic, the common ancestor that began splitting apart in the early Middle Ages. The language — and the
+        country — take their name from the <em>Polanie</em> ("people of the fields"), a tribe that united the region
+        around Gniezno into an early state.</p>
+      <p>When Duke Mieszko I accepted Christianity in 966, Latin clergy arrived with the Latin alphabet. For
+        centuries Latin remained the language of church, law, and record, while Polish lived mainly in speech — which
+        is why its earliest written traces are scattered words inside Latin documents.</p>
+
+      <div class="era">Old Polish · 10th–16th c.</div>
+      <h3>The first written words</h3>
+      <p>The single most famous fragment appears in the <em>Księga henrykowska</em> (Book of Henryków), a Latin
+        chronicle kept by Cistercian monks in Silesia. Around 1270 the monk Peter recorded a sentence a settler said
+        to his wife as she toiled at the grindstone — and noted in the margin, <em>"Hoc est in polonico"</em> ("this
+        is in Polish"):</p>
+      <div class="quote">
+        <div class="pl">"Day, ut ia pobrusa, a ti poziwai"</div>
+        <div class="en">"Let me grind, and you take a rest." — the oldest sentence written in Polish</div>
+        <div class="src">Book of Henryków, c. 1270 · UNESCO Memory of the World Register, 2015</div>
+      </div>
+      <p>Other early monuments followed: the <em>Bogurodzica</em> ("Mother of God"), the oldest Polish religious
+        hymn, later sung by knights before battle; and the <em>Holy Cross Sermons</em>, the oldest surviving Polish
+        prose. Spelling was chaotic — scribes stretched the Latin alphabet to fit Polish sounds it was never built for.</p>
+
+      <div class="era">Middle Polish · 16th–18th c.</div>
+      <h3>The Golden Age</h3>
+      <p>The printing press and the Renaissance turned Polish into a full literary language. Mikołaj Rej, often
+        called the father of Polish literature, championed writing in the vernacular, famously insisting that
+        "Poles are not geese, but have a tongue of their own." The poet Jan Kochanowski raised Polish verse to a
+        European standard. This era fixed many of the spelling conventions still used today — the digraphs
+        <em>sz, cz, rz</em> and the diacritic letters that give Polish its bristling look on the page.</p>
+
+      <div class="era">Partitions · 1795–1918</div>
+      <h3>Surviving erasure</h3>
+      <p>For 123 years Poland vanished from the map, divided among Russia, Prussia, and Austria. The partitioning
+        powers pushed Russification and Germanization, restricting Polish in schools and offices. Yet the language
+        survived in homes, churches, and a flourishing Romantic literature — Adam Mickiewicz's epic
+        <em>Pan Tadeusz</em> opens with a longing invocation of a homeland that, politically, no longer existed.
+        Polish became the thread that held national identity together until independence returned in 1918.</p>
+
+      <div class="era">Modern Polish</div>
+      <h3>The language today</h3>
+      <p>Standard Polish is spoken by around 45 million people and is an official language of Poland and the
+        European Union. It kept features many of its Slavic cousins lost — most strikingly the nasal vowels
+        <em>ą</em> and <em>ę</em>, found in no other major Slavic language. Seven grammatical cases, flexible word
+        order, and consonant clusters (try <em>w Szczebrzeszynie</em>) make it famously challenging — but the
+        spelling, once learned, is highly regular, and stress almost always lands on the second-to-last syllable.</p>
+
+      <h3>Why this matters in the control room</h3>
+      <p>As Poland builds its first large-scale nuclear power plants, you're joining a language with deep roots and
+        a strong sense of precision. Clear, correct Polish — especially the safety and shift-handover vocabulary in
+        these lessons — isn't just courtesy; in a control room it's part of the safety culture. <em>Powodzenia!</em>
+        (Good luck!)</p>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="view-about" class="hidden">
+    <h2 class="title">About this course</h2>
+    <p class="lead">A starter Polish course built for English-speaking Human Factors Engineers heading to nuclear
+      power plants in Poland. It mixes everyday survival Polish with control-room, safety, and shift-handover vocabulary.</p>
+    <div class="pill-row">
+      <span class="badge every">Everyday Polish</span>
+      <span class="badge nuc">Nuclear / Human Factors</span>
+    </div>
+    <h3>How to use it</h3>
+    <p>Open a lesson, tap 🔊 to hear each word (your browser's Polish voice), and tap ✓ when you've learned it.
+      Then take the lesson quiz. Your progress saves automatically on this device.</p>
+    <h3>A note on pronunciation</h3>
+    <p>The italic guides are rough English approximations. Polish stress almost always falls on the
+      second-to-last syllable. Use the 🔊 button for the real thing.</p>
+    <h3>Publish it for your team</h3>
+    <p>This is a single <code>index.html</code> file. To put it online for free with GitHub Pages: create a new
+      public repository, upload <code>index.html</code>, then in <em>Settings → Pages</em> set the source to your
+      main branch. Your team gets a public URL like <code>https://yourname.github.io/nuclear-polish/</code>.</p>
+    <div class="row-actions">
+      <button class="btn ghost small" id="exportProg">Export my progress</button>
+      <button class="btn ghost small" id="resetAll">Reset all my progress</button>
+    </div>
+  </section>
+</main>
+
+<footer>Nuklearny Polski · built for safe, clear communication in the control room · Powodzenia! 🍀</footer>
+
+<script>
+/* ---------------- COURSE DATA ---------------- */
+const LESSONS = [
+  { id:"greetings", cat:"every", title:"1 · Greetings & essentials", desc:"The phrases you'll use on day one — say hello, be polite, and ask people to slow down.",
+    words:[
+      ["Cześć","cheshch","Hi / Bye (informal)"],
+      ["Dzień dobry","jen DOH-bri","Good morning / Good day"],
+      ["Dobry wieczór","DOH-bri VYEH-choor","Good evening"],
+      ["Do widzenia","doh vee-DZEN-ya","Goodbye"],
+      ["Tak","tahk","Yes"],
+      ["Nie","nyeh","No"],
+      ["Proszę","PROH-sheh","Please / You're welcome / Here you go"],
+      ["Dziękuję","jen-KOO-yeh","Thank you"],
+      ["Przepraszam","psheh-PRAH-shahm","Excuse me / Sorry"],
+      ["Nazywam się…","nah-ZIH-vahm sheh","My name is…"],
+      ["Nie rozumiem","nyeh roh-ZOO-myem","I don't understand"],
+      ["Czy mówi pan po angielsku?","chih MOO-vee pahn poh ahn-GYEL-skoo","Do you speak English? (to a man)"],
+    ]},
+  { id:"numbers", cat:"every", title:"2 · Numbers & time", desc:"Count, read gauges aloud, and talk about shifts and timing.",
+    words:[
+      ["zero","ZEH-roh","0"],["jeden","YEH-den","1"],["dwa","dvah","2"],["trzy","tshih","3"],
+      ["cztery","CHTEH-rih","4"],["pięć","pyench","5"],["sześć","sheshch","6"],["siedem","SHYEH-dem","7"],
+      ["osiem","OH-shem","8"],["dziewięć","JEH-vyench","9"],["dziesięć","JEH-shench","10"],
+      ["sto","stoh","100"],["tysiąc","TIH-shonts","1000"],
+      ["godzina","goh-JEE-nah","hour"],["minuta","mee-NOO-tah","minute"],
+      ["Która godzina?","KTOO-rah goh-JEE-nah","What time is it?"],
+      ["teraz","TEH-rahs","now"],["dzisiaj","JEE-shy","today"],["jutro","YOO-troh","tomorrow"],
+    ]},
+  { id:"around", cat:"every", title:"3 · Getting around & food", desc:"Find your way, order a coffee, and ask for the basics.",
+    words:[
+      ["woda","VOH-dah","water"],["kawa","KAH-vah","coffee"],["herbata","hehr-BAH-tah","tea"],
+      ["jedzenie","yeh-DZEH-nyeh","food"],["Gdzie jest…?","gjeh yest","Where is…?"],
+      ["toaleta","toh-ah-LEH-tah","toilet / restroom"],["lewo","LEH-voh","left"],["prawo","PRAH-voh","right"],
+      ["prosto","PROH-stoh","straight ahead"],["Ile to kosztuje?","EE-leh toh kosh-TOO-yeh","How much is it?"],
+      ["Pomocy!","poh-MOH-tsih","Help!"],["Gdzie jest wyjście?","gjeh yest VIY-shcheh","Where is the exit?"],
+    ]},
+  { id:"controlroom", cat:"nuc", title:"4 · Control room & equipment", desc:"The core nouns of the nastawnia — panels, valves, pumps, and parameters.",
+    words:[
+      ["elektrownia jądrowa","eh-lek-TROV-nyah yon-DROH-vah","nuclear power plant"],
+      ["reaktor jądrowy","reh-AK-tor yon-DROH-vih","nuclear reactor"],
+      ["nastawnia","nah-STAHV-nyah","control room"],
+      ["pulpit sterowniczy","POOL-peet steh-rov-NEE-chih","control desk / panel"],
+      ["operator","oh-peh-RAH-tor","operator"],
+      ["zawór","ZAH-voor","valve"],["pompa","POM-pah","pump"],
+      ["ciśnienie","cheesh-NYEH-nyeh","pressure"],["temperatura","tem-peh-rah-TOO-rah","temperature"],
+      ["poziom","POH-zhom","level"],["przepływ","PSHEH-pwif","flow"],
+      ["czujnik","CHOOY-neek","sensor"],["wskaźnik","FSKAHZH-neek","indicator / gauge"],
+      ["przycisk","PSHIH-cheesk","button"],["przełącznik","psheh-WONCH-neek","switch"],
+      ["pręty sterujące","PREN-tih steh-roo-YON-tseh","control rods"],
+      ["chłodziwo","hwoh-JEE-voh","coolant"],
+    ]},
+  { id:"safety", cat:"nuc", title:"5 · Safety & emergencies", desc:"The words that have to be understood instantly — alarms, hazards, and action.",
+    words:[
+      ["bezpieczeństwo","bes-pyeh-CHEN-stfoh","safety / security"],
+      ["niebezpieczeństwo","nyeh-bes-pyeh-CHEN-stfoh","danger"],
+      ["Uwaga!","oo-VAH-gah","Caution! / Attention!"],
+      ["awaria","ah-VAH-ryah","malfunction / breakdown"],
+      ["wypadek","vih-PAH-dek","accident"],
+      ["promieniowanie","proh-myeh-nyoh-VAH-nyeh","radiation"],
+      ["pożar","POH-zhar","fire"],["gaśnica","gahsh-NEE-tsah","fire extinguisher"],
+      ["ewakuacja","eh-vah-koo-AHTS-yah","evacuation"],
+      ["wyjście awaryjne","VIY-shcheh ah-vah-RIY-neh","emergency exit"],
+      ["wyłączenie awaryjne","vih-won-CHEH-nyeh ah-vah-RIY-neh","emergency shutdown (scram)"],
+      ["ostrzeżenie","oh-stsheh-ZHEH-nyeh","warning"],
+      ["Stop!","stop","Stop!"],
+      ["kask","kahsk","hard hat / helmet"],
+      ["dozymetr","doh-ZIH-metr","dosimeter"],
+    ]},
+  { id:"handover", cat:"nuc", title:"6 · Shift handover & human factors", desc:"Communicate clearly across a shift — confirm, report, and flag human-factors concerns.",
+    words:[
+      ["zmiana","ZMYAH-nah","shift"],
+      ["przekazanie zmiany","psheh-kah-ZAH-nyeh ZMYAH-nih","shift handover"],
+      ["procedura","proh-tseh-DOO-rah","procedure"],
+      ["lista kontrolna","LEES-tah kon-TROL-nah","checklist"],
+      ["raport","RAH-port","report"],
+      ["usterka","oo-STEHR-kah","fault / defect"],
+      ["konserwacja","kon-sehr-VAHTS-yah","maintenance"],
+      ["błąd ludzki","bwont LOOD-skee","human error"],
+      ["czynnik ludzki","CHIN-neek LOOD-skee","human factor"],
+      ["obciążenie pracą","ob-chon-ZHEH-nyeh PRAH-tson","workload"],
+      ["zmęczenie","zmen-CHEH-nyeh","fatigue"],
+      ["czujność","CHOOY-noshch","vigilance / alertness"],
+      ["interfejs człowiek–maszyna","in-tehr-FAYS CHWOH-vyek mah-SHIH-nah","human–machine interface"],
+      ["Potwierdzam","pot-VYEHR-dzahm","I confirm / Confirmed"],
+      ["Zrozumiałem","zroh-zoo-MYAH-wem","Understood (said by a man)"],
+    ]},
+];
+
+/* ---------------- COMMON WORDS (frequency bank, audio-only) ---------------- */
+/* [polish, english] — base/dictionary forms. Batch 1. */
+const COMMON_WORDS = [
+  // pronouns & determiners
+  ["ja","I"],["ty","you (singular)"],["on","he"],["ona","she"],["ono","it"],["my","we"],["wy","you (plural)"],
+  ["oni","they (men/mixed)"],["one","they (non-male)"],["to","this / it"],["ten","this (masc.)"],["ta","this (fem.)"],
+  ["tamten","that one"],["mój","my"],["twój","your"],["nasz","our"],["wasz","your (plural)"],["jego","his"],
+  ["jej","her"],["ich","their"],["kto","who"],["co","what"],["który","which"],["czyj","whose"],["taki","such"],
+  ["sam","alone / oneself"],["każdy","each / every"],["wszystko","everything"],["wszyscy","everyone"],
+  ["coś","something"],["ktoś","someone"],["nic","nothing"],["nikt","nobody"],["żaden","none"],["inny","other"],
+  ["jaki","what kind of"],["siebie","oneself"],["swój","one's own"],
+  // question words & adverbs
+  ["gdzie","where"],["kiedy","when"],["jak","how"],["dlaczego","why"],["ile","how much / how many"],
+  ["dokąd","where to"],["skąd","where from"],["czemu","why / what for"],
+  // conjunctions, prepositions, particles
+  ["i","and"],["a","and / but"],["ale","but"],["lub","or"],["albo","or"],["ani","nor"],["więc","so / therefore"],
+  ["bo","because"],["ponieważ","because"],["że","that"],["żeby","so that / in order to"],["jeśli","if"],
+  ["jeżeli","if"],["gdy","when"],["choć","although"],["chociaż","although"],["oraz","as well as"],
+  ["czy","whether"],["niż","than"],["jako","as"],["w","in"],["na","on"],["do","to / into"],["z","with / from"],
+  ["za","behind / for"],["od","from"],["o","about"],["po","after"],["przed","before / in front of"],["pod","under"],
+  ["nad","above / over"],["przy","next to"],["bez","without"],["dla","for"],["między","between"],
+  ["przez","through / by"],["około","around / about"],["obok","beside"],["podczas","during"],
+  ["według","according to"],["mimo","despite"],["oprócz","besides / except"],["wśród","among"],
+  ["też","also / too"],["także","also"],["już","already"],["jeszcze","still / yet"],["tylko","only"],
+  ["nawet","even"],["bardzo","very"],["może","maybe"],["znowu","again"],["zawsze","always"],["nigdy","never"],
+  ["czasem","sometimes"],["często","often"],["rzadko","rarely"],["wtedy","then / at that time"],
+  ["potem","then / afterwards"],["najpierw","first / at first"],["wreszcie","finally"],["tutaj","here"],
+  ["tu","here"],["tam","there"],["wszędzie","everywhere"],["blisko","near"],["daleko","far"],
+  ["razem","together"],["osobno","separately"],["dość","enough / quite"],["zbyt","too (excessively)"],
+  // common verbs (infinitive)
+  ["być","to be"],["mieć","to have"],["móc","to be able / can"],["chcieć","to want"],["musieć","to have to / must"],
+  ["robić","to do / make"],["zrobić","to do (completed)"],["iść","to go (on foot)"],["chodzić","to walk / go"],
+  ["pójść","to go (completed)"],["jechać","to go (by vehicle)"],["jeździć","to travel / drive"],
+  ["przyjść","to come"],["wrócić","to return"],["wracać","to come back"],["dać","to give"],["dawać","to give"],
+  ["brać","to take"],["wziąć","to take (completed)"],["wiedzieć","to know (a fact)"],["znać","to know (be familiar)"],
+  ["myśleć","to think"],["mówić","to speak / say"],["powiedzieć","to say (completed)"],["rozmawiać","to talk"],
+  ["pytać","to ask"],["zapytać","to ask (completed)"],["odpowiadać","to answer"],["prosić","to request"],
+  ["dziękować","to thank"],["widzieć","to see"],["patrzeć","to look"],["słyszeć","to hear"],["słuchać","to listen"],
+  ["czytać","to read"],["pisać","to write"],["napisać","to write (completed)"],["uczyć się","to learn / study"],
+  ["rozumieć","to understand"],["pamiętać","to remember"],["zapomnieć","to forget"],["czuć","to feel"],
+  ["lubić","to like"],["kochać","to love"],["jeść","to eat"],["pić","to drink"],["spać","to sleep"],
+  ["wstać","to get up"],["siedzieć","to sit"],["stać","to stand"],["leżeć","to lie down"],["biegać","to run"],
+  ["pracować","to work"],["odpoczywać","to rest"],["kupować","to buy"],["kupić","to buy (completed)"],
+  ["sprzedawać","to sell"],["płacić","to pay"],["otwierać","to open"],["zamykać","to close"],
+  ["zaczynać","to begin"],["zacząć","to begin (completed)"],["kończyć","to finish"],["skończyć","to finish (completed)"],
+  ["pomagać","to help"],["pomóc","to help (completed)"],["szukać","to look for"],["znaleźć","to find"],
+  ["dostać","to get / receive"],["używać","to use"],["pokazać","to show"],["czekać","to wait"],
+  ["zostać","to stay / become"],["potrzebować","to need"],["próbować","to try"],["spotkać","to meet"],
+  ["tłumaczyć","to translate / explain"],["sprawdzać","to check"],["sprawdzić","to check (completed)"],
+  ["zmieniać","to change"],["decydować","to decide"],["wybierać","to choose"],["dzwonić","to call / ring"],
+  ["prowadzić","to lead / drive"],["nieść","to carry"],["nosić","to carry / wear"],["grać","to play"],
+  ["śpiewać","to sing"],["tańczyć","to dance"],["gotować","to cook"],["myć","to wash"],["sprzątać","to clean up"],
+  ["naprawiać","to repair"],["budować","to build"],["żyć","to live"],["umrzeć","to die"],["bać się","to be afraid"],
+  ["śmiać się","to laugh"],["płakać","to cry"],["cieszyć się","to be glad"],["martwić się","to worry"],
+  ["wierzyć","to believe"],["liczyć","to count"],["mierzyć","to measure"],["kontrolować","to control"],
+  ["działać","to work / operate"],["włączać","to turn on"],["wyłączać","to turn off"],
+  ["latać","to fly"],["pływać","to swim"],["spotykać","to meet (regularly)"],["wybrać","to choose (completed)"],
+  // people
+  ["człowiek","person / human"],["ludzie","people"],["mężczyzna","man"],["kobieta","woman"],["dziecko","child"],
+  ["dzieci","children"],["chłopiec","boy"],["dziewczyna","girl"],["rodzina","family"],["matka","mother"],
+  ["mama","mom"],["ojciec","father"],["tata","dad"],["syn","son"],["córka","daughter"],["brat","brother"],
+  ["siostra","sister"],["mąż","husband"],["żona","wife"],["babcia","grandmother"],["dziadek","grandfather"],
+  ["ciocia","aunt"],["wujek","uncle"],["przyjaciel","friend"],["kolega","colleague / friend (m)"],
+  ["koleżanka","friend (f)"],["sąsiad","neighbor"],["gość","guest"],["nauczyciel","teacher"],["uczeń","pupil"],
+  ["student","student"],["lekarz","doctor"],["pielęgniarka","nurse"],["inżynier","engineer"],
+  ["pracownik","worker / employee"],["szef","boss"],["dyrektor","director"],["kierownik","manager"],
+  ["policjant","police officer"],["kierowca","driver"],["sprzedawca","salesperson"],["klient","customer"],
+  ["żołnierz","soldier"],["król","king"],["prezydent","president"],["naukowiec","scientist"],
+  ["specjalista","specialist"],["ekspert","expert"],
+  // time
+  ["czas","time"],["sekunda","second"],["dzień","day"],["noc","night"],["rano","morning"],["wieczór","evening"],
+  ["południe","noon / south"],["tydzień","week"],["miesiąc","month"],["rok","year"],["wiek","century / age"],
+  ["wczoraj","yesterday"],["popołudnie","afternoon"],["chwila","moment"],["data","date"],["kalendarz","calendar"],
+  ["zegar","clock"],["poniedziałek","Monday"],["wtorek","Tuesday"],["środa","Wednesday"],["czwartek","Thursday"],
+  ["piątek","Friday"],["sobota","Saturday"],["niedziela","Sunday"],["styczeń","January"],["luty","February"],
+  ["marzec","March"],["kwiecień","April"],["maj","May"],["czerwiec","June"],["lipiec","July"],["sierpień","August"],
+  ["wrzesień","September"],["październik","October"],["listopad","November"],["grudzień","December"],
+  ["wiosna","spring"],["lato","summer"],["jesień","autumn"],["zima","winter"],
+  // places
+  ["dom","house / home"],["mieszkanie","apartment"],["pokój","room / peace"],["kuchnia","kitchen"],
+  ["łazienka","bathroom"],["sypialnia","bedroom"],["biuro","office"],["szkoła","school"],
+  ["uniwersytet","university"],["szpital","hospital"],["sklep","shop"],["restauracja","restaurant"],
+  ["kawiarnia","café"],["hotel","hotel"],["bank","bank"],["poczta","post office"],["dworzec","station (rail/bus)"],
+  ["lotnisko","airport"],["stacja","station"],["przystanek","(bus/tram) stop"],["ulica","street"],
+  ["droga","road / way"],["miasto","city / town"],["wieś","village / countryside"],["kraj","country"],
+  ["świat","world"],["niebo","sky / heaven"],["morze","sea"],["jezioro","lake"],["rzeka","river"],
+  ["góra","mountain"],["las","forest"],["pole","field"],["ogród","garden"],["park","park"],["plac","square"],
+  ["most","bridge"],["kościół","church"],["muzeum","museum"],["teatr","theater"],["kino","cinema"],
+  ["biblioteka","library"],["apteka","pharmacy"],["rynek","market square"],["granica","border"],
+  ["miejsce","place"],["okolica","area / surroundings"],["region","region"],
+  // objects & food
+  ["ogień","fire"],["powietrze","air"],["kamień","stone"],["drewno","wood"],["metal","metal"],["szkło","glass"],
+  ["papier","paper"],["książka","book"],["gazeta","newspaper"],["list","letter"],["długopis","pen"],
+  ["ołówek","pencil"],["telefon","phone"],["komputer","computer"],["telewizor","television"],["samochód","car"],
+  ["samolot","airplane"],["pociąg","train"],["autobus","bus"],["rower","bicycle"],["statek","ship"],
+  ["klucz","key"],["drzwi","door"],["okno","window"],["stół","table"],["krzesło","chair"],["łóżko","bed"],
+  ["lampa","lamp"],["zegarek","watch"],["torba","bag"],["pieniądze","money"],["karta","card"],["bilet","ticket"],
+  ["prezent","gift"],["chleb","bread"],["mleko","milk"],["mięso","meat"],["owoc","fruit"],["warzywo","vegetable"],
+  ["jabłko","apple"],["ser","cheese"],["jajko","egg"],["cukier","sugar"],["sól","salt"],["piwo","beer"],
+  ["wino","wine"],["sok","juice"],["zupa","soup"],["obiad","lunch / dinner"],["śniadanie","breakfast"],
+  ["kolacja","supper"],["talerz","plate"],["szklanka","drinking glass"],["filiżanka","cup"],["łyżka","spoon"],
+  ["widelec","fork"],["nóż","knife"],["ubranie","clothing"],["koszula","shirt"],["spodnie","trousers"],
+  ["sukienka","dress"],["buty","shoes"],["płaszcz","coat"],["kurtka","jacket"],["czapka","cap"],["kolor","color"],
+  ["obraz","picture / painting"],["zdjęcie","photo"],["film","film"],["muzyka","music"],["piosenka","song"],
+  // abstract / common nouns
+  ["słowo","word"],["język","language / tongue"],["litera","letter (character)"],["liczba","number"],
+  ["numer","number (id)"],["pytanie","question"],["odpowiedź","answer"],["problem","problem"],["pomysł","idea"],
+  ["myśl","thought"],["prawda","truth"],["kłamstwo","lie"],["historia","history / story"],["przykład","example"],
+  ["powód","reason"],["cel","goal / aim"],["sposób","way / manner"],["część","part"],["koniec","end"],
+  ["początek","beginning"],["środek","middle / means"],["strona","side / page"],["rzecz","thing"],
+  ["sprawa","matter / affair"],["praca","work / job"],["zawód","profession"],["firma","company"],["cena","price"],
+  ["koszt","cost"],["wartość","value"],["ilość","quantity"],["jakość","quality"],["wielkość","size"],
+  ["waga","weight / scale"],["długość","length"],["szerokość","width"],["wysokość","height"],
+  ["życie","life"],["śmierć","death"],["miłość","love"],["przyjaźń","friendship"],["szczęście","happiness / luck"],
+  ["strach","fear"],["nadzieja","hope"],["wiara","faith"],["zdrowie","health"],["choroba","illness"],
+  ["ból","pain"],["siła","strength / force"],["energia","energy"],["moc","power"],["władza","power / authority"],
+  ["rząd","government"],["państwo","state / country"],["polityka","politics"],["prawo","law / right"],
+  ["wolność","freedom"],["wojna","war"],["gospodarka","economy"],["przemysł","industry"],
+  ["nauka","science / learning"],["wiedza","knowledge"],["edukacja","education"],["kultura","culture"],
+  ["sztuka","art"],["religia","religion"],["sprawiedliwość","justice"],
+  // adjectives
+  ["dobry","good"],["zły","bad / angry"],["duży","big"],["mały","small"],["wielki","great / huge"],["nowy","new"],
+  ["stary","old"],["młody","young"],["długi","long"],["krótki","short"],["wysoki","tall / high"],
+  ["niski","low / short"],["szeroki","wide"],["wąski","narrow"],["gruby","thick / fat"],["cienki","thin"],
+  ["ciężki","heavy / hard"],["lekki","light"],["mocny","strong"],["słaby","weak"],["szybki","fast"],
+  ["wolny","slow / free"],["łatwy","easy"],["trudny","difficult"],["prosty","simple / straight"],
+  ["ważny","important"],["ciekawy","interesting"],["nudny","boring"],["piękny","beautiful"],["ładny","pretty"],
+  ["brzydki","ugly"],["czysty","clean"],["brudny","dirty"],["pełny","full"],["pusty","empty"],["gorący","hot"],
+  ["zimny","cold"],["ciepły","warm"],["chłodny","cool"],["jasny","bright / light"],["ciemny","dark"],
+  ["głośny","loud"],["cichy","quiet"],["drogi","expensive / dear"],["tani","cheap"],["bogaty","rich"],
+  ["biedny","poor"],["zdrowy","healthy"],["chory","sick"],["wesoły","cheerful"],["smutny","sad"],
+  ["miły","nice / kind"],["prawdziwy","real / true"],["możliwy","possible"],["gotowy","ready"],["zajęty","busy"],
+  ["otwarty","open"],["zamknięty","closed"],["pewny","sure / certain"],["główny","main"],["ostatni","last"],
+  ["pierwszy","first"],["następny","next"],["poprzedni","previous"],["cały","whole"],["różny","different"],
+  ["podobny","similar"],["równy","equal"],["własny","own"],["publiczny","public"],["prywatny","private"],
+  ["naturalny","natural"],["sztuczny","artificial"],["prawy","right (side)"],["lewy","left (side)"],
+  ["górny","upper"],["dolny","lower"],["wewnętrzny","internal"],["zewnętrzny","external"],["twardy","hard"],
+  ["miękki","soft"],["ostry","sharp"],["suchy","dry"],["mokry","wet"],["świeży","fresh"],["słodki","sweet"],
+  ["gorzki","bitter"],["kwaśny","sour"],["słony","salty"],
+  // colors
+  ["biały","white"],["czarny","black"],["czerwony","red"],["niebieski","blue"],["zielony","green"],
+  ["żółty","yellow"],["brązowy","brown"],["szary","gray"],["różowy","pink"],["fioletowy","purple"],
+  ["pomarańczowy","orange"],["złoty","gold"],["srebrny","silver"],
+  // numbers (beyond 0–10)
+  ["jedenaście","eleven"],["dwanaście","twelve"],["trzynaście","thirteen"],["czternaście","fourteen"],
+  ["piętnaście","fifteen"],["szesnaście","sixteen"],["siedemnaście","seventeen"],["osiemnaście","eighteen"],
+  ["dziewiętnaście","nineteen"],["dwadzieścia","twenty"],["trzydzieści","thirty"],["czterdzieści","forty"],
+  ["pięćdziesiąt","fifty"],["sześćdziesiąt","sixty"],["siedemdziesiąt","seventy"],["osiemdziesiąt","eighty"],
+  ["dziewięćdziesiąt","ninety"],["milion","million"],["drugi","second"],["trzeci","third"],["połowa","half"],
+  ["para","pair"],["raz","once / one time"],
+  // body
+  ["ciało","body"],["głowa","head"],["twarz","face"],["oko","eye"],["ucho","ear"],["nos","nose"],["usta","mouth"],
+  ["ząb","tooth"],["włosy","hair"],["szyja","neck"],["ręka","hand / arm"],["palec","finger"],["noga","leg / foot"],
+  ["stopa","foot"],["serce","heart"],["krew","blood"],["kość","bone"],["skóra","skin"],["plecy","back"],
+  ["brzuch","stomach / belly"],["mózg","brain"],
+  // nature & weather
+  ["słońce","sun"],["księżyc","moon"],["gwiazda","star"],["chmura","cloud"],["deszcz","rain"],["śnieg","snow"],
+  ["wiatr","wind"],["burza","storm"],["mgła","fog"],["lód","ice"],["pogoda","weather"],["drzewo","tree"],
+  ["kwiat","flower"],["trawa","grass"],["liść","leaf"],["roślina","plant"],["zwierzę","animal"],["pies","dog"],
+  ["kot","cat"],["ptak","bird"],["ryba","fish"],["koń","horse"],["krowa","cow"],["świnia","pig"],["owca","sheep"],
+  ["mysz","mouse"],["niedźwiedź","bear"],["wilk","wolf"],["lew","lion"],["słoń","elephant"]
+];
+
+/* ---------------- STATE ---------------- */
+/* Cloud sync (Google sign-in + Firestore) is configured in the
+   <script type="module"> block near the end of this file. With no config it
+   stays fully local; once configured, progress saves to each person's account. */
+const KEY="nuklearny_polski_v1";
+let state = load();
+function load(){
+  let s;
+  try{ s = JSON.parse(localStorage.getItem(KEY)) || fresh(); }catch(e){ s = fresh(); }
+  s.srs = s.srs || {};            // per-card spaced-repetition data
+  return s;
+}
+function fresh(){ return { name:"", learned:{}, quizzes:{}, srs:{} }; }
+function save(){
+  localStorage.setItem(KEY, JSON.stringify(state));
+  if(window.cloudEnabled && cloudUser && window.cloudPush){ window.cloudPush(appGetCloudDoc()); }
+}
+
+function totalWords(){ return LESSONS.reduce((n,l)=>n+l.words.length,0); }
+function learnedCount(lid){
+  const set = state.learned[lid]||{}; return Object.values(set).filter(Boolean).length;
+}
+function totalLearned(){ return LESSONS.reduce((n,l)=>n+learnedCount(l.id),0); }
+function quizzesPassed(){ return Object.values(state.quizzes).filter(Boolean).length; }
+
+/* ---------------- SPEECH ---------------- */
+let plVoice=null;
+function pickVoice(){
+  const vs = speechSynthesis.getVoices();
+  plVoice = vs.find(v=>v.lang && v.lang.toLowerCase().startsWith("pl")) || null;
+}
+if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  const u = new SpeechSynthesisUtterance(text.replace(/…|\?|!/g,""));
+  u.lang="pl-PL"; if(plVoice) u.voice=plVoice; u.rate=.9;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+
+/* ---------------- NAV ---------------- */
+const views = ["lessons","lesson","quiz","flashcards","fcstage","speak","speakstage","sounds","words","leaderboard","history","about"];
+function show(v){ views.forEach(x=>document.getElementById("view-"+x).classList.toggle("hidden",x!==v)); window.scrollTo(0,0); }
+document.querySelectorAll("nav.tabs button").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll("nav.tabs button").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    const t=b.dataset.tab;
+    if(t==="lessons"){ renderLessons(); show("lessons"); }
+    if(t==="flashcards"){ renderFcSetup(); show("flashcards"); }
+    if(t==="speak"){ renderSpeakSetup(); show("speak"); }
+    if(t==="sounds"){ renderSounds(); show("sounds"); }
+    if(t==="words"){ renderWords(); show("words"); }
+    if(t==="leaderboard"){ renderLeaderboard(); show("leaderboard"); }
+    if(t==="history"){ show("history"); }
+    if(t==="about"){ show("about"); }
+  };
+});
+
+/* ---------------- RENDER: LESSON LIST ---------------- */
+function renderLessons(){
+  const grid=document.getElementById("lessonGrid"); grid.innerHTML="";
+  LESSONS.forEach(l=>{
+    const done=learnedCount(l.id), tot=l.words.length, pct=Math.round(done/tot*100);
+    const card=document.createElement("div"); card.className="lesson-card";
+    card.innerHTML=`
+      <div><span class="badge ${l.cat}">${l.cat==="every"?"Everyday":"Nuclear / HF"}</span></div>
+      <h3>${l.title}</h3>
+      <div class="sub">${l.desc}</div>
+      <div class="mini-bar"><i style="width:${pct}%"></i></div>
+      <div class="sub">${done}/${tot} learned${state.quizzes[l.id]?" · ✓ quiz passed":""}</div>`;
+    card.onclick=()=>openLesson(l.id);
+    grid.appendChild(card);
+  });
+  // overall
+  const tot=totalWords(), done=totalLearned(), pct=tot?Math.round(done/tot*100):0;
+  document.getElementById("overallBar").style.width=pct+"%";
+  document.getElementById("overallText").textContent=`${done} of ${tot} words learned · ${quizzesPassed()} quizzes passed`;
+  document.getElementById("ringPct").textContent=pct+"%";
+  const circ=2*Math.PI*27;
+  const fg=document.getElementById("ringFg"); fg.setAttribute("stroke-dasharray",circ);
+  fg.setAttribute("stroke-dashoffset", circ*(1-pct/100));
+}
+
+/* ---------------- RENDER: SINGLE LESSON ---------------- */
+let currentLesson=null;
+function openLesson(id){
+  currentLesson=LESSONS.find(l=>l.id===id);
+  document.getElementById("lessonTitle").textContent=currentLesson.title;
+  document.getElementById("lessonDesc").textContent=currentLesson.desc;
+  renderVocab();
+  show("lesson");
+}
+function renderVocab(){
+  const box=document.getElementById("vocabList"); box.innerHTML="";
+  const set=state.learned[currentLesson.id]||{};
+  currentLesson.words.forEach((w,i)=>{
+    const [pl,pr,en]=w; const on=!!set[i];
+    const row=document.createElement("div"); row.className="word"+(on?" learned":"");
+    row.innerHTML=`
+      <div class="pl">${pl}</div>
+      <div class="pr">${pr}</div>
+      <div class="en">${en}</div>
+      <div class="acts">
+        <button class="iconbtn" title="Listen">🔊</button>
+        <button class="iconbtn ${on?"on":""}" title="Mark learned">✓</button>
+      </div>`;
+    const [spk,chk]=row.querySelectorAll("button");
+    spk.onclick=()=>speak(pl);
+    chk.onclick=()=>{ toggleLearned(currentLesson.id,i); };
+    box.appendChild(row);
+  });
+}
+function toggleLearned(lid,i){
+  state.learned[lid]=state.learned[lid]||{};
+  state.learned[lid][i]=!state.learned[lid][i];
+  save(); renderVocab();
+}
+document.getElementById("backToLessons").onclick=()=>{ renderLessons(); show("lessons"); };
+document.getElementById("markAllLearned").onclick=()=>{
+  state.learned[currentLesson.id]=state.learned[currentLesson.id]||{};
+  currentLesson.words.forEach((_,i)=>state.learned[currentLesson.id][i]=true);
+  save(); renderVocab();
+};
+document.getElementById("resetLesson").onclick=()=>{
+  state.learned[currentLesson.id]={}; state.quizzes[currentLesson.id]=false; save(); renderVocab();
+};
+
+/* ---------------- QUIZ ---------------- */
+let quiz=null;
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; }
+document.getElementById("startQuiz").onclick=()=>{
+  const words=currentLesson.words;
+  const qs=shuffle(words).slice(0,Math.min(6,words.length)).map(correct=>{
+    const askPl = Math.random()<0.5; // ask PL->EN or EN->PL
+    const distract=shuffle(words.filter(w=>w!==correct)).slice(0,3);
+    const opts=shuffle([correct,...distract]);
+    return {askPl,correct,opts};
+  });
+  quiz={lid:currentLesson.id,qs,idx:0,score:0};
+  renderQuiz(); show("quiz");
+};
+document.getElementById("backFromQuiz").onclick=()=>{ openLesson(currentLesson.id); };
+function renderQuiz(){
+  const box=document.getElementById("quizBox");
+  if(quiz.idx>=quiz.qs.length){ return finishQuiz(); }
+  const q=quiz.qs[quiz.idx];
+  const prompt = q.askPl ? q.correct[0] : q.correct[2];
+  const promptSub = q.askPl ? "What does this mean?" : "How do you say this in Polish?";
+  box.innerHTML=`
+    <div class="q-meta">Question ${quiz.idx+1} of ${quiz.qs.length} · Score ${quiz.score}</div>
+    <div class="q-prompt">${prompt} ${q.askPl?'<button class="iconbtn" id="qspeak" style="display:inline-flex;vertical-align:middle">🔊</button>':''}</div>
+    <div class="q-meta">${promptSub}</div>
+    <div id="opts"></div>`;
+  if(q.askPl){ document.getElementById("qspeak").onclick=()=>speak(q.correct[0]); }
+  const optBox=document.getElementById("opts");
+  q.opts.forEach(o=>{
+    const b=document.createElement("button"); b.className="opt";
+    b.textContent = q.askPl ? o[2] : o[0];
+    b.onclick=()=>answer(b,o,q);
+    optBox.appendChild(b);
+  });
+}
+function answer(btn,opt,q){
+  const correct = opt===q.correct;
+  document.querySelectorAll("#opts .opt").forEach(b=>b.disabled=true);
+  if(correct){ btn.classList.add("correct"); quiz.score++; }
+  else{
+    btn.classList.add("wrong");
+    document.querySelectorAll("#opts .opt").forEach(b=>{
+      const txt=q.askPl?q.correct[2]:q.correct[0];
+      if(b.textContent===txt) b.classList.add("correct");
+    });
+  }
+  setTimeout(()=>{ quiz.idx++; renderQuiz(); }, 900);
+}
+function finishQuiz(){
+  const pass = quiz.score >= Math.ceil(quiz.qs.length*0.7);
+  if(pass){ state.quizzes[quiz.lid]=true; save(); }
+  const box=document.getElementById("quizBox");
+  box.innerHTML=`
+    <div class="q-prompt">${pass?"🎉 Zdane! (Passed)":"Prawie! (Almost)"}</div>
+    <p class="lead">You scored <strong>${quiz.score} / ${quiz.qs.length}</strong>.
+      ${pass?"This lesson's quiz is marked passed.":"Pass mark is 70% — review the words and try again."}</p>
+    <div class="row-actions">
+      <button class="btn" id="retry">Try again</button>
+      <button class="btn ghost" id="toLesson">Back to lesson</button>
+    </div>`;
+  document.getElementById("retry").onclick=()=>document.getElementById("startQuiz").click();
+  document.getElementById("toLesson").onclick=()=>openLesson(quiz.lid);
+}
+
+/* ---------------- FLASHCARDS + SPACED REPETITION ---------------- */
+const DAY = 86400000;
+const fc = { dir:"pl", mode:"due", deck:"all", limitType:"none", cardCount:20, timeMin:5 };
+const CARD_OPTS=[10,20,30,50], TIME_OPTS=[3,5,10,15];
+let session = null;
+
+// every card has a stable key "lessonId:index"
+function allCards(){
+  const out=[];
+  LESSONS.forEach(l=>l.words.forEach((w,i)=>out.push({key:l.id+":"+i, lid:l.id, i, w})));
+  COMMON_WORDS.forEach((w,i)=>out.push({key:"common:"+i, lid:"common", i, w:[w[0],"",w[1]]}));
+  return out;
+}
+function lessonLabel(lid){
+  if(lid==="common") return "Common words";
+  const l=LESSONS.find(x=>x.id===lid);
+  return l ? l.title.replace(/^\d+ · /,"") : lid;
+}
+function cardData(key){
+  // ease ~ how "easy"; interval in days; due = timestamp; right/wrong = lifetime tallies
+  return state.srs[key] || { ease:2.5, interval:0, due:0, reps:0, right:0, wrong:0 };
+}
+function isDue(key){ return cardData(key).due <= Date.now(); }
+
+// SM-2-style update on self-grade
+function grade(key, gotIt){
+  const d = cardData(key);
+  if(gotIt){
+    d.right++; d.reps++;
+    if(d.reps===1) d.interval = 1;
+    else if(d.reps===2) d.interval = 3;
+    else d.interval = Math.round(d.interval * d.ease);
+    d.ease = Math.min(3.0, d.ease + 0.08);
+    d.due = Date.now() + d.interval*DAY;
+  } else {
+    d.wrong++; d.reps = 0; d.interval = 0;
+    d.ease = Math.max(1.3, d.ease - 0.25);
+    d.due = Date.now() + 6*60*1000;   // resurface in ~6 minutes, i.e. later this session / today
+  }
+  state.srs[key] = d; save();
+}
+
+function renderFcSetup(){
+  // deck segmented control
+  const deckBox=document.getElementById("fcDeck"); deckBox.innerHTML="";
+  const decks=[["all","All words"]].concat(LESSONS.map(l=>[l.id, l.title.replace(/^\d+ · /,"")]))
+    .concat([["common","Common words"]]);
+  decks.forEach(([id,label])=>{
+    const b=document.createElement("button"); b.textContent=label; b.dataset.deck=id;
+    if(id===fc.deck) b.classList.add("on");
+    b.onclick=()=>{ fc.deck=id; renderFcSetup(); };
+    deckBox.appendChild(b);
+  });
+  syncSeg("fcDir","dir",fc.dir); syncSeg("fcMode","mode",fc.mode);
+  // session-length type + value
+  document.querySelectorAll("#fcLimitType button").forEach(b=>{
+    b.classList.toggle("on", b.dataset.limittype===fc.limitType);
+    b.onclick=()=>{ fc.limitType=b.dataset.limittype; renderFcSetup(); };
+  });
+  const valBox=document.getElementById("fcLimitVal"); valBox.innerHTML="";
+  if(fc.limitType==="none"){ valBox.style.display="none"; }
+  else {
+    valBox.style.display="inline-flex";
+    const opts = fc.limitType==="cards" ? CARD_OPTS : TIME_OPTS;
+    const cur  = fc.limitType==="cards" ? fc.cardCount : fc.timeMin;
+    const unit = fc.limitType==="cards" ? " cards" : " min";
+    opts.forEach(o=>{
+      const b=document.createElement("button"); b.textContent=o+unit;
+      if(o===cur) b.classList.add("on");
+      b.onclick=()=>{ if(fc.limitType==="cards") fc.cardCount=o; else fc.timeMin=o; renderFcSetup(); };
+      valBox.appendChild(b);
+    });
+  }
+  // due overview
+  const dueBox=document.getElementById("fcDue"); dueBox.innerHTML="";
+  const cards=deckCards();
+  const dueNow=cards.filter(c=>isDue(c.key)).length;
+  const newCards=cards.filter(c=>cardData(c.key).reps===0 && cardData(c.key).wrong===0).length;
+  const learning=cards.filter(c=>{const d=cardData(c.key);return d.reps>0 && d.interval<7;}).length;
+  const mature=cards.filter(c=>cardData(c.key).interval>=7).length;
+  [["Due now",dueNow],["New",newCards],["Learning",learning],["Mastered",mature]].forEach(([l,n])=>{
+    const c=document.createElement("div"); c.className="due-chip"; c.innerHTML=`<b>${n}</b>${l}`;
+    dueBox.appendChild(c);
+  });
+}
+function syncSeg(boxId, prop, val){
+  document.querySelectorAll("#"+boxId+" button").forEach(b=>{
+    const on=b.dataset[prop]===val; b.classList.toggle("on",on);
+    b.onclick=()=>{ fc[prop]=b.dataset[prop]; renderFcSetup(); };
+  });
+}
+function deckCards(){
+  const all=allCards();
+  return fc.deck==="all" ? all : all.filter(c=>c.lid===fc.deck);
+}
+
+document.getElementById("fcStart").onclick=()=>{
+  let pool=deckCards();
+  if(fc.mode==="due"){
+    pool = pool.filter(c=>isDue(c.key));
+    // most overdue / hardest first
+    pool.sort((a,b)=> (cardData(a.key).due - cardData(b.key).due) || (cardData(a.key).ease - cardData(b.key).ease));
+    if(!pool.length){ alert("Nothing is due right now — nice work! Switch to \"Practice all\" to study ahead."); return; }
+  } else {
+    // practice all: weakest (lowest ease, most wrong) first, then shuffle within
+    pool = shuffle(pool).sort((a,b)=> cardData(a.key).ease - cardData(b.key).ease);
+  }
+  if(fc.limitType==="cards") pool = pool.slice(0, fc.cardCount);
+  session = { queue:pool, i:0, seen:0, got:0, missed:0,
+    timed: fc.limitType==="time",
+    endTime: fc.limitType==="time" ? Date.now()+fc.timeMin*60000 : 0 };
+  if(session.timed){
+    session.timer = setInterval(()=>{
+      if(Date.now()>=session.endTime){ finishSession(); }
+      else updateCounter();
+    }, 1000);
+  }
+  showCard();
+  show("fcstage");
+};
+document.getElementById("fcBack").onclick=()=>{
+  if(session && session.timer){ clearInterval(session.timer); session.timer=null; }
+  renderFcSetup(); show("flashcards");
+};
+
+function curDir(){ return fc.dir==="mix" ? (Math.random()<0.5?"pl":"en") : fc.dir; }
+function updateCounter(){
+  let txt = `Card ${Math.min(session.i+1,session.queue.length)} of ${session.queue.length}`;
+  if(session.timed){
+    const left=Math.max(0,session.endTime-Date.now());
+    const m=Math.floor(left/60000), s=Math.floor((left%60000)/1000);
+    txt += `  ·  ⏱ ${m}:${s.toString().padStart(2,"0")} left`;
+  }
+  document.getElementById("fcCounter").textContent=txt;
+}
+function showCard(){
+  if(session.timed && Date.now()>=session.endTime) return finishSession();
+  if(session.i>=session.queue.length) return finishSession();
+  const card=session.queue[session.i];
+  const [pl,pr,en]=card.w;
+  const dir=curDir(); session.curDir=dir;
+  const cardEl=document.getElementById("fcCard");
+  cardEl.classList.remove("flipped");
+  document.getElementById("fcGrade").classList.add("hidden");
+  const front = dir==="pl" ? {side:"Polish",term:pl,pr:pr} : {side:"English",term:en,pr:""};
+  const back  = dir==="pl" ? {side:"English",term:en,pr:""} : {side:"Polish",term:pl,pr:pr};
+  document.getElementById("fcFrontSide").textContent=front.side;
+  document.getElementById("fcFront").textContent=front.term;
+  document.getElementById("fcFrontPr").textContent=front.pr;
+  document.getElementById("fcBackSide").textContent=back.side;
+  document.getElementById("fcBackTerm").textContent=back.term;
+  document.getElementById("fcBackPr").textContent=back.pr;
+  // speaker icon lives on whichever face shows Polish
+  const frontSpk=document.getElementById("fcFrontSpeak"), backSpk=document.getElementById("fcBackSpeak");
+  frontSpk.classList.toggle("hidden", dir!=="pl");
+  backSpk.classList.toggle("hidden", dir!=="en");
+  const speakPolish=(e)=>{ e.stopPropagation(); speak(pl); };
+  frontSpk.onclick=speakPolish; backSpk.onclick=speakPolish;
+  updateCounter();
+  const d=cardData(card.key);
+  document.getElementById("fcStat").innerHTML=
+    `Seen <b>${session.seen}</b> · Got <b>${session.got}</b> · Missed <b>${session.missed}</b>`+
+    `&nbsp;·&nbsp; this word: <b>${d.right}</b>✓ / <b>${d.wrong}</b>✗`;
+}
+document.getElementById("fcCard").onclick=()=>{
+  const el=document.getElementById("fcCard");
+  const nowFlipped = !el.classList.contains("flipped");   // toggle — flip both ways
+  el.classList.toggle("flipped", nowFlipped);
+  // grade buttons only while the answer side is showing
+  document.getElementById("fcGrade").classList.toggle("hidden", !nowFlipped);
+};
+function doGrade(gotIt){
+  const card=session.queue[session.i];
+  if(!document.getElementById("fcCard").classList.contains("flipped")) return; // must flip first
+  grade(card.key, gotIt);
+  session.seen++; gotIt?session.got++:session.missed++;
+  if(!gotIt){
+    // re-insert a few cards later in this same session so you practice it again now
+    const reinsertAt=Math.min(session.queue.length, session.i + 4);
+    session.queue.splice(reinsertAt,0,card);
+  }
+  session.i++; showCard();
+}
+document.getElementById("fcGot").onclick=()=>doGrade(true);
+document.getElementById("fcMiss").onclick=()=>doGrade(false);
+
+function finishSession(){
+  if(session.done) return; session.done=true;
+  if(session.timer){ clearInterval(session.timer); session.timer=null; }
+  const cardEl=document.getElementById("fcCard");
+  cardEl.classList.remove("flipped");
+  document.getElementById("fcGrade").classList.add("hidden");
+  document.getElementById("fcCounter").textContent="Session complete 🎉";
+  document.getElementById("fcFrontSide").textContent="";
+  document.getElementById("fcFront").textContent="Dobra robota!";
+  document.getElementById("fcFrontPr").textContent="(Good job!)";
+  document.querySelector("#fcCard .front .hint").textContent="";
+  document.getElementById("fcStat").innerHTML=
+    `Reviewed <b>${session.seen}</b> · Got <b>${session.got}</b> · Missed <b>${session.missed}</b>. `+
+    `Missed words are scheduled to return soon.`;
+}
+
+/* ---------------- WORD LIST ---------------- */
+const STATUS_LABEL={notstarted:"Not started",struggle:"Struggle",learning:"Learning",mastered:"Mastered"};
+const STATUS_ORDER={struggle:0,learning:1,notstarted:2,mastered:3};
+const wordFilter={status:"all", q:"", sort:"lesson", dir:1};
+
+function wordStatus(lid,i){
+  const d=cardData(lid+":"+i);
+  const total=d.right+d.wrong;
+  const lessonLearned=(state.learned[lid]||{})[i];
+  if(total===0 && d.reps===0) return lessonLearned ? "learning" : "notstarted";
+  const acc = total ? d.right/total : 0;
+  if(d.interval>=21 && acc>=0.8) return "mastered";
+  if(d.reps===0 || acc<0.5 || d.ease<=1.6) return "struggle";
+  return "learning";
+}
+
+function renderWords(){
+  const rows=allCards().map(c=>{
+    const d=cardData(c.key), total=d.right+d.wrong;
+    return {pl:c.w[0],pr:c.w[1],en:c.w[2],
+      lesson:lessonLabel(c.lid),
+      st:wordStatus(c.lid,c.i),
+      acc: total? Math.round(d.right/total*100) : null,
+      right:d.right, wrong:d.wrong};
+  });
+  // counts for filter chips
+  const counts={all:rows.length,notstarted:0,struggle:0,learning:0,mastered:0};
+  rows.forEach(r=>counts[r.st]++);
+  // filter chips
+  const fbox=document.getElementById("wlFilters"); fbox.innerHTML="";
+  [["all","All"],["notstarted","Not started"],["struggle","Struggle"],["learning","Learning"],["mastered","Mastered"]]
+    .forEach(([k,label])=>{
+      const c=document.createElement("div"); c.className="wl-chip"+(wordFilter.status===k?" on":"");
+      c.innerHTML=`<span class="dot ${k}"></span>${label} <span class="n">${counts[k]}</span>`;
+      c.onclick=()=>{ wordFilter.status=k; renderWords(); };
+      fbox.appendChild(c);
+    });
+  // sort buttons (lesson / needs work)
+  document.querySelectorAll("#wlSort button").forEach(b=>{
+    b.classList.toggle("on", b.dataset.sort===wordFilter.sort);
+    b.onclick=()=>{ wordFilter.sort=b.dataset.sort; renderWords(); };
+  });
+  // clickable column headers (Polish / English alphabetical)
+  const thPl=document.getElementById("wlThPl"), thEn=document.getElementById("wlThEn");
+  thPl.querySelector(".arrow").textContent = wordFilter.sort==="pl" ? (wordFilter.dir>0?"▲":"▼") : "";
+  thEn.querySelector(".arrow").textContent = wordFilter.sort==="en" ? (wordFilter.dir>0?"▲":"▼") : "";
+  thPl.onclick=()=>{ wordFilter.dir = wordFilter.sort==="pl" ? -wordFilter.dir : 1; wordFilter.sort="pl"; renderWords(); };
+  thEn.onclick=()=>{ wordFilter.dir = wordFilter.sort==="en" ? -wordFilter.dir : 1; wordFilter.sort="en"; renderWords(); };
+  // filter + search
+  let view=rows.filter(r=> wordFilter.status==="all"||r.st===wordFilter.status);
+  const q=wordFilter.q.trim().toLowerCase();
+  if(q) view=view.filter(r=>r.pl.toLowerCase().includes(q)||r.en.toLowerCase().includes(q));
+  if(wordFilter.sort==="needs") view.sort((a,b)=>STATUS_ORDER[a.st]-STATUS_ORDER[b.st]);
+  else if(wordFilter.sort==="pl") view.sort((a,b)=>a.pl.localeCompare(b.pl,"pl")*wordFilter.dir);
+  else if(wordFilter.sort==="en") view.sort((a,b)=>a.en.localeCompare(b.en,"en")*wordFilter.dir);
+  // table
+  const body=document.getElementById("wlBody"); body.innerHTML="";
+  if(!view.length){ body.innerHTML=`<tr><td colspan="5" class="wl-empty">No words match.</td></tr>`; return; }
+  view.forEach(r=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><strong>${r.pl}</strong><div class="pr">${r.pr}</div></td>
+      <td>${r.en}</td>
+      <td class="acc">${r.lesson}</td>
+      <td class="acc">${r.acc===null?"—":r.acc+"%"} ${r.right+r.wrong?`<span style="opacity:.6">(${r.right}✓/${r.wrong}✗)</span>`:""}</td>
+      <td><span class="status ${r.st}"><span class="dot"></span>${STATUS_LABEL[r.st]}</span></td>`;
+    body.appendChild(tr);
+  });
+}
+document.getElementById("wlSearch").addEventListener("input",e=>{ wordFilter.q=e.target.value; renderWords(); });
+
+/* ---------------- PRONUNCIATION ---------------- */
+/* card item: [letter, IPA, approx(html), exampleWord, exampleEnglish] */
+const SND_KEYFACTS = [
+  ["32 letters","The Polish alphabet has 32 letters — the Latin ones (minus q, v, x) plus 9 special letters."],
+  ["ą ć ę ł ń ó ś ź ż","The 9 letters with diacritics. Each has its own distinct sound."],
+  ["Spelling is regular","Unlike English, letters map to sounds consistently — read what you see."],
+  ["Stress is predictable","Stress almost always lands on the second-to-last syllable."],
+];
+const SND_SECTIONS = [
+  { type:"cards", heading:"Vowels", blurb:"Six pure vowel sounds. They're short and crisp — never drawn out into diphthongs the way English vowels are.",
+    items:[
+      ["a","/a/","like <em>a</em> in “father”","kawa","coffee"],
+      ["e","/ɛ/","like <em>e</em> in “bet”","ser","cheese"],
+      ["i","/i/","like <em>ee</em> in “see” (also softens the consonant before it)","kino","cinema"],
+      ["o","/ɔ/","like <em>o</em> in “not”","okno","window"],
+      ["u","/u/","like <em>oo</em> in “boot”","ulica","street"],
+      ["ó","/u/","exactly the same as <em>u</em> — “oo”","góra","mountain"],
+      ["y","/ɨ/","like <em>i</em> in “bit”, but deeper in the throat","syn","son"],
+    ]},
+  { type:"cards", heading:"Nasal vowels", blurb:"Polish kept two nasal vowels that vanished from most Slavic languages. Air comes partly through the nose, like French.",
+    items:[
+      ["ą","/ɔ̃/","nasal “o”, like French <em>on</em>","wąż","snake"],
+      ["ę","/ɛ̃/","nasal “e”, like French <em>vin</em>","pięć","five"],
+    ]},
+  { type:"note", heading:"", html:"<b>How the nasals shift.</b> Before <code>b</code> or <code>p</code> they sound like “om/em” (<span class='w'>dąb</span> → “domp”). Before <code>t, d, c, cz</code> they sound like “on/en” (<span class='w'>pięć</span> → “pyench”). And at the very end of a word, <code>ę</code> is usually relaxed to a plain “e” (<span class='w'>się</span> → “sie”)." },
+  { type:"cards", heading:"Consonants that differ from English", blurb:"Most consonants (b, d, f, k, l, m, n, p, s, t, z) sound roughly as in English. These are the ones that catch English speakers out.",
+    items:[
+      ["c","/ts/","“ts” as in “cats” — never a “k” or “s”","cena","price"],
+      ["w","/v/","“v” as in “van” — never an English “w”","woda","water"],
+      ["ł","/w/","“w” as in “water” (this is the English-w sound)","mały","small"],
+      ["j","/j/","“y” as in “yes”","jajko","egg"],
+      ["r","/r/","a rolled or tapped “r”, like Spanish","rower","bicycle"],
+      ["g","/ɡ/","always hard “g” as in “go” — never as in “gem”","noga","leg"],
+      ["ch","/x/","raspy “h” from the throat, like Scottish “loch”","chleb","bread"],
+      ["h","/x/","same raspy “h” as <em>ch</em>","herbata","tea"],
+      ["ń","/ɲ/","“ny” as in “canyon”","koń","horse"],
+    ]},
+  { type:"cards", heading:"The hush sounds — digraphs & soft letters", blurb:"Polish has three families of “sh/ch/zh” sounds. The two-letter digraphs (cz, sz, dż) are hard; the accented letters (ć, ś, ź, dź) are their soft, gentler cousins.",
+    items:[
+      ["cz","/tʂ/","hard “ch” as in “church”","czas","time"],
+      ["ć","/tɕ/","soft “ch” — gentler, tongue forward (also spelled <em>ci</em>)","być","to be"],
+      ["sz","/ʂ/","“sh” as in “shop”","szkoła","school"],
+      ["ś","/ɕ/","soft “sh” — hissier, gentler (also spelled <em>si</em>)","coś","something"],
+      ["ż","/ʐ/","“s” as in “measure”","żaba","frog"],
+      ["rz","/ʐ/","exactly the same as <em>ż</em>","rzeka","river"],
+      ["ź","/ʑ/","soft “zh” (also spelled <em>zi</em>)","źle","badly"],
+      ["dz","/dz/","“ds” as in “kids”","dzwon","bell"],
+      ["dż","/dʐ/","hard “j” as in “jam”","dżem","jam"],
+      ["dź","/dʑ/","soft “j” — gentler (also spelled <em>dzi</em>)","dźwig","crane"],
+    ]},
+  { type:"cards", heading:"Softening with “i”", blurb:"When i sits before another vowel, it doesn't make its own sound — it softens the consonant in front of it into the accented version.",
+    items:[
+      ["ci","/tɕ/","= <em>ć</em> before a vowel","ciasto","cake"],
+      ["si","/ɕ/","= <em>ś</em>","siedem","seven"],
+      ["zi","/ʑ/","= <em>ź</em>","ziemia","earth / land"],
+      ["ni","/ɲ/","= <em>ń</em>","nie","no"],
+      ["dzi","/dʑ/","= <em>dź</em>","dziecko","child"],
+    ]},
+  { type:"pairs", heading:"Same sound, two spellings", blurb:"These pairs are pronounced identically — which spelling to use is just memorized for each word (a common source of Polish spelling mistakes, even for natives).",
+    items:[
+      ["ó","u","both are “oo”","góra"],
+      ["rz","ż","both are “zh” (as in “measure”)","rzeka"],
+      ["ch","h","both are the raspy “h” (as in “loch”)","chleb"],
+    ]},
+  { type:"note", heading:"The three-way contrast", html:"It helps to hear the “s/sh” family as three steps. <b>Plain letter</b> = English-like, <b>digraph</b> = hard (tongue curled back), <b>accented</b> = soft (tongue forward). Compare: <code>c · cz · ć</code> (ts / hard-ch / soft-ch), <code>s · sz · ś</code> (s / hard-sh / soft-sh), <code>z · ż · ź</code> (z / hard-zh / soft-zh), and <code>dz · dż · dź</code>." },
+  { type:"note", heading:"Stress, devoicing & foreign letters", html:"<b>Stress:</b> almost always on the second-to-last syllable (<span class='w'>ma-TE-ma-ty-ka</span>). <b>Final devoicing:</b> a voiced consonant at the end of a word hardens to its voiceless partner — b→p, d→t, g→k, w→f, z→s — so <span class='w'>chleb</span> sounds like “chlep” and <span class='w'>Bóg</span> like “Buk”. <b>In clusters:</b> voicing spreads, so <span class='w'>kwiat</span> sounds like “kfiat” and <span class='w'>trzy</span> like “tshy”. <b>q, v, x</b> appear only in foreign words and names; native Polish writes <code>kw</code>, <code>w</code>, <code>ks</code> instead." },
+  { type:"twist", heading:"Put it together — a classic tongue-twister", items:[
+      ["W Szczebrzeszynie chrząszcz brzmi w trzcinie.","In Szczebrzeszyn, a beetle buzzes in the reeds. (The most famous Polish tongue-twister.)"],
+      ["Stół z powyłamywanymi nogami.","A table with broken-off legs."],
+    ]},
+];
+
+function sndCard([letter, ipa, approx, ex, exEn]){
+  const c=document.createElement("div"); c.className="snd-card";
+  c.innerHTML=`<div class="snd-letter">${letter}<span class="ipa">${ipa}</span></div>
+    <div class="snd-body"><div class="snd-approx">${approx}</div>
+    <div class="snd-ex"><span class="w">${ex}</span> — ${exEn}</div></div>
+    <button class="snd-play" title="Hear an example">🔊</button>`;
+  c.onclick=()=>speak(ex);
+  c.querySelector(".snd-play").onclick=(e)=>{ e.stopPropagation(); speak(ex); };
+  return c;
+}
+function renderSounds(){
+  const kf=document.getElementById("sndKeyfacts"); kf.innerHTML="";
+  SND_KEYFACTS.forEach(([b,s])=>{
+    const d=document.createElement("div"); d.className="kf";
+    d.innerHTML=`<b>${b}</b><span>${s}</span>`; kf.appendChild(d);
+  });
+  const box=document.getElementById("sndSections"); box.innerHTML="";
+  SND_SECTIONS.forEach(sec=>{
+    const wrap=document.createElement("div"); wrap.className="snd-sec";
+    if(sec.heading) wrap.innerHTML=`<h3>${sec.heading}</h3>`;
+    if(sec.blurb) wrap.innerHTML+=`<p class="blurb">${sec.blurb}</p>`;
+    if(sec.type==="cards"){
+      const g=document.createElement("div"); g.className="snd-grid";
+      sec.items.forEach(it=>g.appendChild(sndCard(it)));
+      wrap.appendChild(g);
+    } else if(sec.type==="pairs"){
+      const g=document.createElement("div"); g.className="snd-grid";
+      sec.items.forEach(([a,b,desc,ex])=>{
+        const d=document.createElement("div"); d.className="snd-pair";
+        d.innerHTML=`<span class="lbl">${a}</span><span class="eq">=</span><span class="lbl">${b}</span>
+          <span class="desc">${desc}</span><button class="snd-play" title="Hear an example">🔊</button>`;
+        d.querySelector(".snd-play").onclick=()=>speak(ex);
+        g.appendChild(d);
+      });
+      wrap.appendChild(g);
+    } else if(sec.type==="note"){
+      const n=document.createElement("div"); n.className="snd-note"; n.innerHTML=sec.html;
+      wrap.appendChild(n);
+    } else if(sec.type==="twist"){
+      sec.items.forEach(([pl,en])=>{
+        const t=document.createElement("div"); t.className="snd-twist";
+        t.innerHTML=`<div class="pl">${pl}<button class="snd-play" title="Hear it">🔊</button></div><div class="en">${en}</div>`;
+        t.querySelector(".snd-play").onclick=()=>speak(pl);
+        wrap.appendChild(t);
+      });
+    }
+    box.appendChild(wrap);
+  });
+}
+
+/* ---------------- SPEAKING PRACTICE ---------------- */
+/* Each scenario is a short dialogue. Turns alternate but agent turns can repeat.
+   who:"agent" lines are spoken to you. who:"you" lines are what YOU must say in Polish.
+   For "you" turns, `pr` is the pronunciation hint shown when you reveal the answer.
+   {NAME} is replaced with your saved name (or "Anders"). */
+const SCENARIOS = [
+  { id:"intro", cat:"every", title:"First day — Introductions",
+    desc:"Meet a Polish colleague: greet, give your name, and say goodbye.",
+    turns:[
+      {who:"agent", pl:"Dzień dobry! Miło mi. Jak się pan nazywa?", en:"Good morning! Nice to meet you. What's your name?"},
+      {who:"you", pl:"Dzień dobry. Nazywam się {NAME}.", pr:"jen DOH-bri. nah-ZIH-vahm sheh {NAME}", en:"Good morning. My name is {NAME}."},
+      {who:"agent", pl:"Bardzo mi miło. Czy mówi pan po polsku?", en:"Very nice to meet you. Do you speak Polish?"},
+      {who:"you", pl:"Tak, trochę.", pr:"tahk, TROH-heh", en:"Yes, a little."},
+      {who:"agent", pl:"Świetnie! Powodzenia w pracy.", en:"Great! Good luck at work."},
+      {who:"you", pl:"Dziękuję. Do widzenia.", pr:"jen-KOO-yeh. doh vee-DZEN-ya", en:"Thank you. Goodbye."},
+    ]},
+  { id:"cafe", cat:"every", title:"At the café",
+    desc:"Order a coffee, add water, and ask what it costs.",
+    turns:[
+      {who:"agent", pl:"Dzień dobry, co podać?", en:"Good morning, what can I get you?"},
+      {who:"you", pl:"Dzień dobry. Poproszę kawę.", pr:"jen DOH-bri. poh-PROH-sheh KAH-veh", en:"Good morning. A coffee, please."},
+      {who:"agent", pl:"Coś jeszcze?", en:"Anything else?"},
+      {who:"you", pl:"Tak, poproszę wodę.", pr:"tahk, poh-PROH-sheh VOH-deh", en:"Yes, water please."},
+      {who:"agent", pl:"To wszystko?", en:"Is that everything?"},
+      {who:"you", pl:"Tak. Ile to kosztuje?", pr:"tahk. EE-leh toh kosh-TOO-yeh", en:"Yes. How much is it?"},
+      {who:"agent", pl:"Piętnaście złotych.", en:"Fifteen zlotys."},
+      {who:"you", pl:"Proszę. Dziękuję.", pr:"PROH-sheh. jen-KOO-yeh", en:"Here you go. Thank you."},
+    ]},
+  { id:"directions", cat:"every", title:"Asking for directions",
+    desc:"Find the restroom and the exit in a new building.",
+    turns:[
+      {who:"agent", pl:"W czym mogę pomóc?", en:"How can I help?"},
+      {who:"you", pl:"Przepraszam, gdzie jest toaleta?", pr:"psheh-PRAH-shahm, gjeh yest toh-ah-LEH-tah", en:"Excuse me, where is the toilet?"},
+      {who:"agent", pl:"Prosto i w prawo.", en:"Straight ahead and to the right."},
+      {who:"you", pl:"Dziękuję. A gdzie jest wyjście?", pr:"jen-KOO-yeh. ah gjeh yest VIY-shcheh", en:"Thank you. And where is the exit?"},
+      {who:"agent", pl:"Na lewo, na końcu korytarza.", en:"To the left, at the end of the corridor."},
+      {who:"you", pl:"Dziękuję bardzo.", pr:"jen-KOO-yeh BAR-dzoh", en:"Thank you very much."},
+    ]},
+  { id:"handover", cat:"nuc", title:"Shift handover",
+    desc:"Take over the shift: confirm status, pressure, temperature, and faults.",
+    turns:[
+      {who:"agent", pl:"Cześć. Przekazanie zmiany. Wszystko w porządku?", en:"Hi. Shift handover. Is everything OK?"},
+      {who:"you", pl:"Tak, wszystko w porządku.", pr:"tahk, FSHIST-koh fpoh-ZHONT-koo", en:"Yes, everything is in order."},
+      {who:"agent", pl:"Jakie jest ciśnienie w reaktorze?", en:"What is the pressure in the reactor?"},
+      {who:"you", pl:"Ciśnienie jest stabilne.", pr:"cheesh-NYEH-nyeh yest stah-BEEL-neh", en:"The pressure is stable."},
+      {who:"agent", pl:"A temperatura?", en:"And the temperature?"},
+      {who:"you", pl:"Temperatura jest normalna.", pr:"tem-peh-rah-TOO-rah yest nor-MAL-nah", en:"The temperature is normal."},
+      {who:"agent", pl:"Czy są jakieś usterki?", en:"Are there any faults?"},
+      {who:"you", pl:"Nie, nie ma usterek.", pr:"nyeh, nyeh mah oo-STEH-rek", en:"No, there are no faults."},
+      {who:"agent", pl:"Dobrze. Potwierdzam przekazanie zmiany.", en:"Good. I confirm the shift handover."},
+      {who:"you", pl:"Potwierdzam. Do widzenia.", pr:"pot-VYEHR-dzahm. doh vee-DZEN-ya", en:"I confirm. Goodbye."},
+    ]},
+  { id:"alarm", cat:"nuc", title:"Alarm in the control room",
+    desc:"Respond to a pump malfunction: ask what happened, act, and request help.",
+    turns:[
+      {who:"agent", pl:"Uwaga! Alarm w nastawni!", en:"Attention! Alarm in the control room!"},
+      {who:"you", pl:"Co się stało?", pr:"tsoh sheh STAH-woh", en:"What happened?"},
+      {who:"agent", pl:"Awaria pompy. Wysokie ciśnienie.", en:"Pump malfunction. High pressure."},
+      {who:"you", pl:"Rozumiem. Zamykam zawór.", pr:"roh-ZOO-myem. zah-MIH-kahm ZAH-voor", en:"Understood. I'm closing the valve."},
+      {who:"agent", pl:"Dobrze. Czy potrzebujesz pomocy?", en:"Good. Do you need help?"},
+      {who:"you", pl:"Tak, poproszę o pomoc.", pr:"tahk, poh-PROH-sheh oh POH-mots", en:"Yes, I request help."},
+      {who:"agent", pl:"Już idę. Zachowaj spokój.", en:"I'm coming. Stay calm."},
+      {who:"you", pl:"Potwierdzam. Dziękuję.", pr:"pot-VYEHR-dzahm. jen-KOO-yeh", en:"Confirmed. Thank you."},
+    ]},
+  { id:"safety", cat:"nuc", title:"Safety briefing",
+    desc:"Before entering: put on protective gear and confirm the emergency exit.",
+    turns:[
+      {who:"agent", pl:"Przed wejściem proszę założyć kask.", en:"Before entering, please put on a hard hat."},
+      {who:"you", pl:"Rozumiem. Gdzie jest kask?", pr:"roh-ZOO-myem. gjeh yest kahsk", en:"Understood. Where is the hard hat?"},
+      {who:"agent", pl:"Tam, przy drzwiach. Weź też dozymetr.", en:"There, by the door. Also take a dosimeter."},
+      {who:"you", pl:"Dobrze. Mam kask i dozymetr.", pr:"DOH-bzheh. mahm kahsk ee doh-ZIH-metr", en:"OK. I have the hard hat and dosimeter."},
+      {who:"agent", pl:"W razie pożaru, gdzie jest wyjście awaryjne?", en:"In case of fire, where is the emergency exit?"},
+      {who:"you", pl:"Wyjście awaryjne jest na lewo.", pr:"VIY-shcheh ah-vah-RIY-neh yest nah LEH-voh", en:"The emergency exit is on the left."},
+      {who:"agent", pl:"Zgadza się. Powodzenia na zmianie.", en:"Correct. Good luck on your shift."},
+      {who:"you", pl:"Dziękuję. Zrozumiałem.", pr:"jen-KOO-yeh. zroh-zoo-MYAH-wem", en:"Thank you. Understood."},
+    ]},
+];
+
+/* speech recognition support */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+function myName(){ return (state.name && state.name.trim()) ? state.name.trim() : "Anders"; }
+function fillName(s){ return s.replace(/\{NAME\}/g, myName()); }
+
+/* text similarity, lenient on Polish diacritics */
+function spNorm(s){ return s.toLowerCase().replace(/[.,!?;:…„"""'-]/g," ").replace(/\s+/g," ").trim(); }
+function spFold(s){ return s.replace(/ą/g,"a").replace(/ć/g,"c").replace(/ę/g,"e").replace(/ł/g,"l")
+  .replace(/ń/g,"n").replace(/ó/g,"o").replace(/ś/g,"s").replace(/ż/g,"z").replace(/ź/g,"z"); }
+function lev(a,b){
+  const m=a.length,n=b.length; if(!m) return n; if(!n) return m;
+  let prev=Array.from({length:n+1},(_,i)=>i), cur=new Array(n+1);
+  for(let i=1;i<=m;i++){ cur[0]=i;
+    for(let j=1;j<=n;j++){ const cost=a[i-1]===b[j-1]?0:1;
+      cur[j]=Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+cost); }
+    [prev,cur]=[cur,prev];
+  }
+  return prev[n];
+}
+function spSim(said, target){
+  const A=spNorm(said), B=spNorm(target); if(!A||!B) return 0;
+  const r1=1-lev(A,B)/Math.max(A.length,B.length);
+  const fA=spFold(A), fB=spFold(B);
+  const r2=1-lev(fA,fB)/Math.max(fA.length,fB.length);
+  return Math.max(r1,r2);
+}
+
+let spSession=null, spRec=null, spListening=false;
+
+function renderSpeakSetup(){
+  const sup=document.getElementById("spSupport");
+  if(SR){
+    sup.innerHTML="🎙️ Your browser supports speech recognition. The first time, it will ask permission to use your microphone. Works best in Chrome or Edge. Speak clearly after the mic turns red.";
+  } else {
+    sup.innerHTML="⚠️ This browser can't listen to your speech (try Chrome or Edge for live scoring). You can still practise: each turn shows the answer so you can read it aloud and self-grade.";
+  }
+  const grid=document.getElementById("spGrid"); grid.innerHTML="";
+  SCENARIOS.forEach(s=>{
+    const youTurns=s.turns.filter(t=>t.who==="you").length;
+    const card=document.createElement("div"); card.className="lesson-card";
+    card.innerHTML=`
+      <div class="sp-card-cat"><span class="badge ${s.cat}">${s.cat==="every"?"Everyday":"Nuclear / HF"}</span></div>
+      <h3>${s.title}</h3>
+      <div class="sub">${s.desc}</div>
+      <div class="sub">${youTurns} lines for you to say</div>`;
+    card.onclick=()=>startScenario(s.id);
+    grid.appendChild(card);
+  });
+}
+
+function startScenario(id){
+  const sc=SCENARIOS.find(s=>s.id===id);
+  spSession={ sc, idx:0, results:[] };
+  document.getElementById("spTitle").textContent=sc.title;
+  document.getElementById("spDesc").textContent=sc.desc;
+  document.getElementById("spChat").innerHTML="";
+  document.getElementById("spPanel").classList.add("hidden");
+  document.getElementById("spSelf").classList.add("hidden");
+  show("speakstage");
+  spAdvance();
+}
+
+function spAddAgent(turn){
+  const pl=fillName(turn.pl);
+  const b=document.createElement("div"); b.className="sp-bubble sp-agent";
+  b.innerHTML=`<div class="pl">${pl}</div><div class="en">${fillName(turn.en)}</div>
+    <button class="spk" title="Hear it again">🔊 Replay</button>`;
+  b.querySelector(".spk").onclick=()=>speak(pl);
+  document.getElementById("spChat").appendChild(b);
+  window.scrollTo(0,document.body.scrollHeight);
+  speak(pl);
+}
+
+function spAddYou(turn, said, score){
+  const pl=fillName(turn.pl);
+  const pct=Math.round(score*100);
+  const partial = score<0.82;
+  const b=document.createElement("div"); b.className="sp-bubble sp-you"+(partial?" partial":"");
+  let chip="";
+  if(said!==null){
+    const col = score>=0.82?"#15301c" : score>=0.6?"#3a2f12":"#3a1a1a";
+    const txt = score>=0.82?"#7ee29a" : score>=0.6?"#e3c264":"#f8a9a4";
+    chip=`<div class="scorechip" style="background:${col};color:${txt}">${pct}% match</div>`;
+  }
+  b.innerHTML=`<div class="pl">${pl}</div><div class="pr">${fillName(turn.pr||"")}</div>
+    ${said?`<div class="heard">heard: "${said}"</div>`:""}${chip}
+    <button class="spk" title="Hear the model answer">🔊 Replay</button>`;
+  b.querySelector(".spk").onclick=()=>speak(pl);
+  document.getElementById("spChat").appendChild(b);
+  window.scrollTo(0,document.body.scrollHeight);
+}
+
+function spAdvance(){
+  const sess=spSession; if(!sess) return;
+  // play any consecutive agent turns
+  while(sess.idx<sess.sc.turns.length && sess.sc.turns[sess.idx].who==="agent"){
+    spAddAgent(sess.sc.turns[sess.idx]); sess.idx++;
+  }
+  if(sess.idx>=sess.sc.turns.length){ return spFinish(); }
+  // now a "you" turn
+  spShowPanel(sess.sc.turns[sess.idx]);
+}
+
+function spShowPanel(turn){
+  const panel=document.getElementById("spPanel");
+  panel.classList.remove("hidden");
+  document.getElementById("spSelf").classList.add("hidden");
+  document.getElementById("spEn").textContent=fillName(turn.en);
+  const hint=document.getElementById("spHint");
+  hint.classList.add("hidden");
+  hint.innerHTML=`<div class="pl">${fillName(turn.pl)}</div><div class="pr">${fillName(turn.pr||"")}</div>`;
+  document.getElementById("spFeedback").classList.add("hidden");
+  document.getElementById("spNextBtn").classList.add("hidden");
+  document.getElementById("spStatus").textContent = SR ? "Tap the mic and say your line" : "Read the answer aloud, then self-grade below";
+  const mic=document.getElementById("spMic");
+  if(SR){ mic.style.display=""; } else { mic.style.display="none"; document.getElementById("spHint").classList.remove("hidden"); spShowSelf(); }
+}
+
+function spShowSelf(){
+  document.getElementById("spSelf").classList.remove("hidden");
+}
+
+function spListen(){
+  if(!SR){ return; }
+  if(spListening){ try{spRec.stop();}catch(e){} return; }
+  const turn=spSession.sc.turns[spSession.idx];
+  const target=fillName(turn.pl);
+  spRec=new SR(); spRec.lang="pl-PL"; spRec.interimResults=false; spRec.maxAlternatives=4;
+  const mic=document.getElementById("spMic"), status=document.getElementById("spStatus");
+  spRec.onstart=()=>{ spListening=true; mic.classList.add("listening"); status.textContent="Listening… say it now"; speechSynthesis.cancel(); };
+  spRec.onerror=(e)=>{ status.textContent = e.error==="not-allowed" ? "Microphone blocked — allow mic access in your browser." : "Didn't catch that — tap the mic to try again."; };
+  spRec.onend=()=>{ spListening=false; mic.classList.remove("listening"); };
+  spRec.onresult=(e)=>{
+    let best=0, heard="";
+    for(let i=0;i<e.results[0].length;i++){
+      const alt=e.results[0][i].transcript;
+      const s=spSim(alt,target);
+      if(s>best){ best=s; if(i===0) heard=alt; }
+    }
+    if(!heard) heard=e.results[0][0].transcript;
+    spScoreTurn(turn, heard, best);
+  };
+  try{ spRec.start(); }catch(e){ status.textContent="Couldn't start the mic — tap to retry."; }
+}
+
+function spScoreTurn(turn, said, score){
+  const fb=document.getElementById("spFeedback");
+  fb.classList.remove("hidden","great","close","again");
+  let cls, msg;
+  if(score>=0.82){ cls="great"; msg="Świetnie! 🎉 Spot on."; }
+  else if(score>=0.6){ cls="close"; msg="Blisko! (Close) — check the pronunciation and try again, or continue."; }
+  else { cls="again"; msg="Spróbuj jeszcze raz (Try again). Tap 🔊 Hear it, then the mic."; }
+  fb.classList.add(cls);
+  fb.innerHTML=`${msg}<br><b>${Math.round(score*100)}% match.</b> Heard: "${said}" · Target: "${fillName(turn.pl)}"`;
+  document.getElementById("spHint").classList.remove("hidden");
+  document.getElementById("spNextBtn").classList.remove("hidden");
+  document.getElementById("spStatus").textContent="Tap the mic to retry, or Continue →";
+  spSession.lastSaid=said; spSession.lastScore=score;
+}
+
+function spCommitTurn(said, score){
+  const turn=spSession.sc.turns[spSession.idx];
+  spSession.results.push({score: score});
+  spAddYou(turn, said, score);
+  spSession.idx++;
+  document.getElementById("spPanel").classList.add("hidden");
+  document.getElementById("spSelf").classList.add("hidden");
+  spSession.lastSaid=null; spSession.lastScore=null;
+  spAdvance();
+}
+
+function spFinish(){
+  document.getElementById("spPanel").classList.add("hidden");
+  document.getElementById("spSelf").classList.add("hidden");
+  const res=spSession.results.filter(r=>r.score!==null);
+  const avg = res.length ? Math.round(res.reduce((a,r)=>a+r.score,0)/res.length*100) : null;
+  const b=document.createElement("div"); b.className="sp-bubble sp-agent";
+  b.style.maxWidth="100%";
+  let line = avg===null ? "Dobra robota! (Good job!) Scenario complete."
+    : avg>=82 ? `Brawo! 🎉 Świetna rozmowa — average match ${avg}%.`
+    : avg>=60 ? `Dobra robota! Average match ${avg}%. Keep practising the tricky lines.`
+    : `Skończone! Average match ${avg}%. Try this one again to sharpen it up.`;
+  b.innerHTML=`<div class="pl">✅ ${line}</div>
+    <div class="en">Replay any line with 🔊, or pick another situation.</div>`;
+  document.getElementById("spChat").appendChild(b);
+  const wrap=document.createElement("div"); wrap.className="row-actions"; wrap.style.marginTop="16px";
+  wrap.innerHTML=`<button class="btn" id="spReplay">Try again</button>
+    <button class="btn ghost" id="spOther">Other situations</button>`;
+  document.getElementById("spChat").appendChild(wrap);
+  document.getElementById("spReplay").onclick=()=>startScenario(spSession.sc.id);
+  document.getElementById("spOther").onclick=()=>{ renderSpeakSetup(); show("speak"); };
+  window.scrollTo(0,document.body.scrollHeight);
+}
+
+/* wire up the persistent controls once */
+document.getElementById("spBack").onclick=()=>{ if(spRec&&spListening){try{spRec.stop();}catch(e){}} renderSpeakSetup(); show("speak"); };
+document.getElementById("spMic").onclick=spListen;
+document.getElementById("spHintBtn").onclick=()=>document.getElementById("spHint").classList.toggle("hidden");
+document.getElementById("spHearBtn").onclick=()=>{ if(spSession) speak(fillName(spSession.sc.turns[spSession.idx].pl)); };
+document.getElementById("spSkipBtn").onclick=()=>{ if(spSession) spCommitTurn(null, null); };
+document.getElementById("spNextBtn").onclick=()=>{ spCommitTurn(spSession.lastSaid, spSession.lastScore); };
+document.getElementById("spSelfGot").onclick=()=>{ if(spSession) spCommitTurn(null, 1); };
+document.getElementById("spSelfMiss").onclick=()=>{ if(spSession) spCommitTurn(null, 0.5); };
+
+/* ---------------- TEAM LEADERBOARD (Firebase cloud) ---------------- */
+let cloudUser=null;   // {uid,name,email,photo} when signed in, else null
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function teamStats(){
+  let mastered=0;
+  allCards().forEach(c=>{ if(cardData(c.key).interval>=7) mastered++; });
+  return { name:(state.name||"Anonymous"), learned:totalLearned(),
+           quizzes:quizzesPassed(), mastered };
+}
+/* full snapshot pushed to the cloud (includes progress for cross-device restore) */
+function appGetCloudDoc(){
+  const ts=teamStats();
+  return { name: state.name || (cloudUser&&cloudUser.name) || "Anonymous",
+           learned: state.learned, quizzes: state.quizzes, srs: state.srs,
+           stat_learned: ts.learned, stat_quizzes: ts.quizzes, stat_mastered: ts.mastered };
+}
+/* merge a cloud document into local state without losing local progress */
+function mergeCloudIntoState(d){
+  if(!d) return;
+  const dl=d.learned||{}, dq=d.quizzes||{}, ds=d.srs||{};
+  for(const lid in dl){
+    state.learned[lid]=state.learned[lid]||{};
+    for(const i in dl[lid]){ if(dl[lid][i]) state.learned[lid][i]=true; }
+  }
+  for(const lid in dq){ if(dq[lid]) state.quizzes[lid]=true; }
+  for(const k in ds){
+    const a=state.srs[k], b=ds[k];
+    if(!a){ state.srs[k]=b; continue; }
+    const ah=(a.right||0)+(a.wrong||0), bh=(b.right||0)+(b.wrong||0);
+    if(bh>ah) state.srs[k]=b;     // keep the more-reviewed version
+  }
+  if(d.name && !state.name) state.name=d.name;
+}
+/* called by the Firebase module on auth changes */
+window.appOnSignedIn=function(user, cloudDoc){
+  cloudUser=user;
+  mergeCloudIntoState(cloudDoc);
+  if(!state.name && user.name) state.name=user.name;
+  save();                 // persist locally + push merged result back to cloud
+  updateAccountUI(); refreshGreet(); rerenderVisible();
+};
+window.appOnSignedOut=function(){ cloudUser=null; updateAccountUI(); rerenderVisible(); };
+window.appCloudReady=function(){ updateAccountUI(); };
+
+function rerenderVisible(){
+  renderLessons();
+  const vis=id=>!document.getElementById("view-"+id).classList.contains("hidden");
+  if(vis("leaderboard")) renderLeaderboard();
+  if(vis("words")) renderWords();
+  if(vis("flashcards")) renderFcSetup();
+}
+
+/* ---- account UI in the header ---- */
+function updateAccountUI(){
+  const signIn=document.getElementById("signInBtn");
+  const chip=document.getElementById("userChip");
+  const nameI=document.getElementById("nameInput");
+  const saveB=document.getElementById("saveName");
+  if(!window.cloudEnabled){ signIn.classList.add("hidden"); chip.classList.add("hidden"); return; }
+  if(cloudUser){
+    signIn.classList.add("hidden"); nameI.classList.add("hidden"); saveB.classList.add("hidden");
+    chip.classList.remove("hidden");
+    document.getElementById("userName").textContent=cloudUser.name||cloudUser.email||"Signed in";
+    const ph=document.getElementById("userPhoto");
+    if(cloudUser.photo){ ph.src=cloudUser.photo; ph.classList.remove("hidden"); } else ph.classList.add("hidden");
+  } else {
+    signIn.classList.remove("hidden"); chip.classList.add("hidden");
+    nameI.classList.remove("hidden"); saveB.classList.remove("hidden");
+  }
+}
+document.getElementById("signInBtn").onclick=()=>{ if(window.cloudSignIn) window.cloudSignIn(); };
+document.getElementById("signOutBtn").onclick=()=>{ if(window.cloudSignOut) window.cloudSignOut(); };
+
+/* ---- the table ---- */
+function lbRow(rank,r,isMe,tot){
+  const pct=Math.round((Number(r.learned)||0)/tot*100);
+  const tr=document.createElement("tr"); if(isMe) tr.className="me";
+  const ava = r.photo ? `<img class="lb-ava" src="${escapeHtml(r.photo)}" referrerpolicy="no-referrer" alt="">` : `<span class="lb-ava lb-ava-blank"></span>`;
+  tr.innerHTML=`<td class="rank">${rank}</td>
+    <td><span class="lb-eng">${ava}<span>${escapeHtml(r.name||"Anonymous")}${isMe?' <span class="tag">(you)</span>':''}</span></span></td>
+    <td>${Number(r.learned)||0}</td><td>${Number(r.quizzes)||0}</td>
+    <td style="min-width:140px"><div class="bar"><i style="width:${pct}%"></i></div></td>`;
+  return tr;
+}
+async function renderLeaderboard(){
+  const body=document.getElementById("lbBody");
+  const note=document.getElementById("lbNote");
+  const tot=totalWords();
+  if(!window.cloudEnabled){
+    if(note) note.innerHTML="<strong>Local-only mode.</strong> This board shows just you, because cloud sync isn't set up yet. "+
+      "To make it a shared, live leaderboard with Google sign-in, follow <code>How to publish and share.md</code> and paste your Firebase "+
+      "config into the module at the bottom of this file.";
+    body.innerHTML="";
+    body.appendChild(lbRow(1, {name:state.name||"You", learned:totalLearned(), quizzes:quizzesPassed()}, true, tot));
+    return;
+  }
+  if(note){
+    note.innerHTML = cloudUser
+      ? "<strong>Shared team leaderboard.</strong> Live across everyone signed in, ranked by words learned. Refresh the page to pull the latest scores."
+      : "<strong>Sign in to join.</strong> Click “Sign in with Google” (top-right). Your progress then saves to your account, follows you across devices, and appears here.";
+  }
+  body.innerHTML=`<tr><td colspan="5" class="wl-empty">Loading team…</td></tr>`;
+  let list=[];
+  try{ list=await window.cloudFetchLeaderboard(); if(!Array.isArray(list)) list=[]; }
+  catch(e){ body.innerHTML=`<tr><td colspan="5" class="wl-empty">Couldn't load the leaderboard right now — your own progress is still saved.</td></tr>`; return; }
+  // make sure my freshest numbers appear immediately
+  if(cloudUser){
+    const mine=teamStats();
+    const me={ id:cloudUser.uid, name:state.name||cloudUser.name||"You", photo:cloudUser.photo,
+               learned:mine.learned, quizzes:mine.quizzes, mastered:mine.mastered };
+    const i=list.findIndex(r=>r.id===cloudUser.uid);
+    if(i>=0) list[i]=Object.assign({},list[i],me); else list.push(me);
+  }
+  list.sort((a,b)=> (Number(b.learned)-Number(a.learned)) ||
+                    (Number(b.quizzes)-Number(a.quizzes)) ||
+                    (Number(b.mastered)-Number(a.mastered)));
+  body.innerHTML="";
+  if(!list.length){ body.innerHTML=`<tr><td colspan="5" class="wl-empty">No one's on the board yet — sign in and start learning!</td></tr>`; return; }
+  const myUid=cloudUser&&cloudUser.uid;
+  list.forEach((r,i)=> body.appendChild(lbRow(i+1, r, r.id===myUid, tot)));
+}
+
+/* ---------------- NAME ---------------- */
+function refreshGreet(){
+  document.getElementById("greet").textContent = state.name ? `Cześć, ${state.name}!` : "";
+  document.getElementById("nameInput").value = state.name||"";
+}
+document.getElementById("saveName").onclick=()=>{
+  state.name=document.getElementById("nameInput").value.trim(); save(); refreshGreet();
+};
+document.getElementById("nameInput").addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("saveName").click(); });
+
+/* ---------------- ABOUT actions ---------------- */
+document.getElementById("exportProg").onclick=()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download=(state.name||"my")+"-polish-progress.json"; a.click();
+};
+document.getElementById("resetAll").onclick=()=>{
+  if(confirm("Reset ALL your progress on this device?")){ state=fresh(); save(); refreshGreet(); renderLessons(); show("lessons");
+    document.querySelector('nav.tabs button[data-tab="lessons"]').click(); }
+};
+
+/* ---------------- INIT ---------------- */
+refreshGreet();
+updateAccountUI();
+renderLessons();
+show("lessons");
+</script>
+
+<!-- =====================================================================
+     CLOUD SYNC — Google sign-in + Firestore leaderboard (optional)
+     To turn this on, paste your Firebase web-app config below (see
+     "How to publish and share.md"). Until you do, the app stays fully local.
+     ===================================================================== -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, collection, query, orderBy, limit, getDocs, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+/* ===== PASTE YOUR FIREBASE CONFIG HERE ===== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyD8swEB7Z_mu56YQ1dR5C16oQivRNBjKUM",
+  authDomain: "nuclearpolish.firebaseapp.com",
+  projectId: "nuclearpolish",
+  storageBucket: "nuclearpolish.firebasestorage.app",
+  messagingSenderId: "645140844790",
+  appId: "1:645140844790:web:5a9e8ab1680bf89fa99cd7",
+  measurementId: "G-VEFC76VSHR"
+};
+/* =========================================== */
+
+const configured = FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey.indexOf("PASTE") !== 0;
+window.cloudEnabled = !!configured;
+
+if (configured) {
+  const app = initializeApp(FIREBASE_CONFIG);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+  let user = null, pushTimer = null;
+
+  window.cloudSignIn  = () => signInWithPopup(auth, provider).catch(e => alert("Sign-in failed: " + e.message));
+  window.cloudSignOut = () => signOut(auth);
+
+  window.cloudPush = (data) => {
+    if (!user) return;
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(async () => {
+      try {
+        await setDoc(doc(db, "users", user.uid), {
+          name: data.name || user.displayName || "Anonymous",
+          photo: user.photoURL || "",
+          learned: data.learned || {}, quizzes: data.quizzes || {}, srs: data.srs || {},
+          stat_learned: data.stat_learned || 0,
+          stat_quizzes: data.stat_quizzes || 0,
+          stat_mastered: data.stat_mastered || 0,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      } catch (err) { console.warn("Cloud save failed:", err); }
+    }, 800);
+  };
+
+  window.cloudFetchLeaderboard = async () => {
+    const q = query(collection(db, "users"), orderBy("stat_learned", "desc"), limit(100));
+    const snap = await getDocs(q);
+    const out = [];
+    snap.forEach(d => {
+      const v = d.data();
+      out.push({ id: d.id, name: v.name, photo: v.photo,
+                 learned: v.stat_learned || 0, quizzes: v.stat_quizzes || 0, mastered: v.stat_mastered || 0 });
+    });
+    return out;
+  };
+
+  onAuthStateChanged(auth, async (u) => {
+    user = u;
+    if (u) {
+      let cloud = null;
+      try { const ds = await getDoc(doc(db, "users", u.uid)); if (ds.exists()) cloud = ds.data(); }
+      catch (e) { console.warn("Cloud load failed:", e); }
+      window.appOnSignedIn && window.appOnSignedIn(
+        { uid: u.uid, name: u.displayName, email: u.email, photo: u.photoURL }, cloud);
+    } else {
+      window.appOnSignedOut && window.appOnSignedOut();
+    }
+  });
+}
+window.appCloudReady && window.appCloudReady();
+</script>
+</body>
+</html>
