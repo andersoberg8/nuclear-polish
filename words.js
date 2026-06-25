@@ -13,11 +13,14 @@
 const COMMON_WORDS = [
   // — A —
   ["a","and / but"],
+  ["aby","in order to / so that"],
   ["albo","or"],
   ["ale","but"],
   ["ani","nor"],
   ["apteka","pharmacy"],
+  ["auto","car, automobile"],
   ["autobus","bus"],
+  ["aż","until / up to / as many as"],
 
   // — B —
   ["babcia","grandmother"],

@@ -498,7 +498,7 @@
     <div class="wl-controls">
       <input id="wlSearch" placeholder="Search Polish or English…">
       <div class="seg" id="wlSort">
-        <button data-sort="lesson" class="on">By lesson</button>
+        <button data-sort="file" class="on">List order</button>
         <button data-sort="needs">Needs work first</button>
       </div>
     </div>
@@ -1117,7 +1117,7 @@ function finishSession(){
 /* ---------------- WORD LIST ---------------- */
 const STATUS_LABEL={notstarted:"Not started",struggle:"Struggle",learning:"Learning",mastered:"Mastered"};
 const STATUS_ORDER={struggle:0,learning:1,notstarted:2,mastered:3};
-const wordFilter={status:"all", q:"", sort:"lesson", dir:1};
+const wordFilter={status:"all", q:"", sort:"file", dir:1};
 
 function wordStatus(card){
   const d=cardData(card.key);
@@ -1131,9 +1131,9 @@ function wordStatus(card){
 }
 
 function renderWords(){
-  const rows=allCards().map(c=>{
+  const rows=allCards().map((c,idx)=>{
     const d=cardData(c.key), total=d.right+d.wrong;
-    return {pl:c.w[0],pr:c.w[1],en:c.w[2],
+    return {idx, pl:c.w[0],pr:c.w[1],en:c.w[2],
       lesson:lessonLabel(c.lid),
       st:wordStatus(c),
       acc: total? Math.round(d.right/total*100) : null,
@@ -1166,7 +1166,8 @@ function renderWords(){
   let view=rows.filter(r=> wordFilter.status==="all"||r.st===wordFilter.status);
   const q=wordFilter.q.trim().toLowerCase();
   if(q) view=view.filter(r=>r.pl.toLowerCase().includes(q)||r.en.toLowerCase().includes(q));
-  if(wordFilter.sort==="needs") view.sort((a,b)=>STATUS_ORDER[a.st]-STATUS_ORDER[b.st]);
+  if(wordFilter.sort==="file") view.sort((a,b)=>a.idx-b.idx);   // source order: lessons, then words.js order
+  else if(wordFilter.sort==="needs") view.sort((a,b)=>STATUS_ORDER[a.st]-STATUS_ORDER[b.st]);
   else if(wordFilter.sort==="pl") view.sort((a,b)=>a.pl.localeCompare(b.pl,"pl")*wordFilter.dir);
   else if(wordFilter.sort==="en") view.sort((a,b)=>a.en.localeCompare(b.en,"en")*wordFilter.dir);
   // table
