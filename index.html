@@ -909,13 +909,59 @@ const fc = { dir:"pl", mode:"due", deck:"all", limitType:"none", cardCount:20, t
 const CARD_OPTS=[10,20,30,50], TIME_OPTS=[3,5,10,15];
 let session = null;
 
+/* ---- auto pronunciation guide ----
+   Polish spelling is regular, so we can generate a rough English-style guide
+   straight from the word: handle digraphs and accented letters, split into
+   syllables, and CAP the stressed (second-to-last) one. Used for the common-word
+   bank (words.js), which only stores [polish, english]. */
+const _PL_VOWELS = "aeiouóyąę";
+const _PL_MAP = {
+  "a":["ah",1],"e":["eh",1],"i":["ee",1],"o":["oh",1],"u":["oo",1],"ó":["oo",1],"y":["ih",1],"ą":["on",1],"ę":["en",1],
+  "b":["b",0],"c":["ts",0],"ć":["ch",0],"d":["d",0],"f":["f",0],"g":["g",0],"h":["h",0],"j":["y",0],"k":["k",0],
+  "l":["l",0],"ł":["w",0],"m":["m",0],"n":["n",0],"ń":["ny",0],"p":["p",0],"r":["r",0],"s":["s",0],"ś":["sh",0],
+  "t":["t",0],"w":["v",0],"z":["z",0],"ź":["zh",0],"ż":["zh",0],"q":["k",0],"v":["v",0],"x":["ks",0]
+};
+function _plTokenize(s){
+  const isV=c=>c && _PL_VOWELS.indexOf(c)>=0, toks=[]; let i=0;
+  while(i<s.length){
+    const c=s[i], c2=s.substr(i,2), c3=s.substr(i,3);
+    if((c2==="ci"||c2==="si"||c2==="zi"||c2==="ni") && isV(s[i+2])){ toks.push([{ci:"ch",si:"sh",zi:"zh",ni:"ny"}[c2],0]); i+=2; continue; }
+    if(c3==="dzi" && isV(s[i+3])){ toks.push(["j",0]); i+=3; continue; }
+    if(c2==="ch"){ toks.push(["h",0]); i+=2; continue; }
+    if(c2==="cz"){ toks.push(["ch",0]); i+=2; continue; }
+    if(c2==="sz"){ toks.push(["sh",0]); i+=2; continue; }
+    if(c2==="rz"){ toks.push(["zh",0]); i+=2; continue; }
+    if(c2==="dż"||c2==="dź"){ toks.push(["j",0]); i+=2; continue; }
+    if(c2==="dz"){ toks.push(["dz",0]); i+=2; continue; }
+    if(c==="ę" && i===s.length-1){ toks.push(["eh",1]); i+=1; continue; }   // word-final ę relaxes to "e"
+    if(c==="i" && isV(s[i+1])){ toks.push(["y",0]); i+=1; continue; }   // i as a soft glide before a vowel
+    const m=_PL_MAP[c];
+    if(m){ toks.push([m[0],m[1]]); i+=1; continue; }
+    i+=1;   // skip anything unexpected
+  }
+  return toks;
+}
+function _plSyll(toks){
+  const sylls=[]; let cur="";
+  for(const [str,v] of toks){ cur+=str; if(v){ sylls.push(cur); cur=""; } }
+  if(cur){ if(sylls.length) sylls[sylls.length-1]+=cur; else sylls.push(cur); }
+  if(sylls.length>=2){ const k=sylls.length-2; sylls[k]=sylls[k].toUpperCase(); }   // stress
+  return sylls.join("-");
+}
+function plPronounce(word){
+  return String(word||"").toLowerCase().split(/\s+/).map(w=>{
+    const t=_plTokenize(w); return t.length ? _plSyll(t) : "";
+  }).filter(Boolean).join(" ");
+}
+
 // every card has a stable key "lessonId:index"
 function allCards(){
   const out=[];
   LESSONS.forEach(l=>l.words.forEach((w,i)=>out.push({key:l.id+":"+i, lid:l.id, i, w})));
   // Common words are keyed by the Polish word itself (not list position), so that
   // inserting/reordering words in words.js never disturbs saved review history.
-  COMMON_WORDS.forEach((w,i)=>out.push({key:"common:"+String(w[0]).toLowerCase(), lid:"common", i, w:[w[0],"",w[1]]}));
+  // The pronunciation guide is generated automatically from the spelling.
+  COMMON_WORDS.forEach((w,i)=>out.push({key:"common:"+String(w[0]).toLowerCase(), lid:"common", i, w:[w[0],plPronounce(w[0]),w[1]]}));
   return out;
 }
 function lessonLabel(lid){
