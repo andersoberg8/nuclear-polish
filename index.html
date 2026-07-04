@@ -96,11 +96,26 @@
   .seg button.on{background:var(--accent);color:#06210f}
   .fc-stage{display:flex;flex-direction:column;align-items:center;gap:18px}
   .fc-counter{color:var(--muted);font-size:.85rem}
-  .flashcard{width:100%;max-width:460px;height:240px;perspective:1200px;cursor:pointer}
-  .flashcard .inner{position:relative;width:100%;height:100%}
-  .flashcard .face{position:absolute;inset:0;border-radius:18px;border:1px solid var(--line);
+  .flashcard{width:100%;max-width:460px;perspective:1200px;cursor:pointer}
+  .flashcard .inner{display:grid;width:100%}
+  .flashcard .face{grid-area:1/1;position:relative;min-height:240px;border-radius:18px;border:1px solid var(--line);
     background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;
     opacity:0;visibility:hidden;transition:opacity .25s ease}
+  .flashcard.verb .face{padding-bottom:42px}
+  .fc-conj{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;width:100%;margin-top:4px}
+  .fc-conj:empty{display:none}
+  .fc-conj-col{background:#131a21;border:1px solid var(--line);border-radius:10px;padding:9px 13px;
+    min-width:150px;flex:1;max-width:200px;text-align:left;font-size:.84rem}
+  .fc-conj-col b{display:block;font-size:.98rem}
+  .fc-conj-col i{display:block;color:var(--muted);font-style:normal;font-size:.66rem;text-transform:uppercase;
+    letter-spacing:.5px;margin:2px 0 7px}
+  .fc-conj-col .fc-form{display:grid;grid-template-columns:44px 1fr;align-items:baseline;margin:4px 0}
+  .fc-conj-col em{color:var(--muted);font-style:normal;font-size:.76rem}
+  .fc-conj-col u,.fc-conj .ff u{display:block;text-decoration:none;color:var(--accent2);font-style:italic;font-size:.68rem;line-height:1.3}
+  .fc-say{cursor:pointer;white-space:nowrap}
+  .fc-say:hover{color:var(--accent2)}
+  .fc-say .ico{font-size:.62rem;opacity:.55;margin-left:4px;vertical-align:middle}
+  .fc-say:hover .ico{opacity:1}
   .flashcard .front{opacity:1;visibility:visible}
   .flashcard.flipped .front{opacity:0;visibility:hidden}
   .flashcard.flipped .back{opacity:1;visibility:visible}
@@ -111,6 +126,11 @@
     width:46px;height:46px;border-radius:50%;cursor:pointer;font-size:1.3rem;display:flex;
     align-items:center;justify-content:center;margin-top:4px}
   .flashcard .fc-speak:hover{border-color:var(--accent);background:#15241a}
+  .flashcard .fc-speak.hidden{display:none}
+  .fc-tags{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:2px}
+  .fc-tags:empty{display:none}
+  .fc-tags span{background:var(--panel2);border:1px solid var(--line);color:var(--muted);
+    border-radius:10px;padding:2px 10px;font-size:.72rem}
   .flashcard .face .side{position:absolute;top:14px;left:16px;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px}
   .flashcard .back{background:var(--panel2)}
   .fc-grade{display:flex;gap:12px;width:100%;max-width:460px}
@@ -225,6 +245,15 @@
   .wl-chip.on{border-color:var(--text)}
   .wl-chip .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
   .wl-chip .n{color:var(--muted);font-weight:700}
+  .wl-chip.on .n{color:var(--accent2)}
+  .fc-tag-hint{color:var(--muted);font-weight:400;font-size:.8rem}
+  .wl-tag{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);
+    border-radius:10px;padding:1px 8px;font-size:.72rem;margin:2px 4px 0 0;cursor:pointer}
+  .wl-tag:hover{border-color:var(--accent2);color:var(--text)}
+  .wl-tag.on{border-color:var(--accent);color:var(--accent)}
+  .wl-chip.tag-clear{color:var(--muted);font-weight:600}
+  .wl-chip.tag-empty{color:var(--muted);cursor:default;font-weight:400}
+  .wl-chip.tag-empty:hover{border-color:var(--line)}
   .dot.notstarted{background:#8b9aa8} .dot.struggle{background:#f85149}
   .dot.learning{background:#e3b341} .dot.mastered{background:#3fb950} .dot.all{background:var(--accent2)}
   .status{padding:4px 11px;border-radius:20px;font-size:.76rem;font-weight:700;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
@@ -353,11 +382,15 @@
         <label>Deck</label>
         <div class="seg" id="fcDeck"></div>
       </div>
+      <div class="fc-field" id="fcTagField">
+        <label>Tags <span class="fc-tag-hint">— optional, pick one or more to study just those words</span></label>
+        <div class="wl-filters" id="fcTags"></div>
+      </div>
       <div class="fc-field">
         <label>Show first</label>
         <div class="seg" id="fcDir">
-          <button data-dir="pl" class="on">Polish → English</button>
-          <button data-dir="en">English → Polish</button>
+          <button data-dir="pl">Polish → English</button>
+          <button data-dir="en" class="on">English → Polish</button>
           <button data-dir="mix">Mixed</button>
         </div>
       </div>
@@ -398,6 +431,8 @@
             <div class="side" id="fcFrontSide"></div>
             <div class="term" id="fcFront"></div>
             <div class="pr" id="fcFrontPr"></div>
+            <div class="fc-tags" id="fcFrontTags"></div>
+            <div class="fc-conj" id="fcFrontConj"></div>
             <button class="fc-speak hidden" id="fcFrontSpeak" title="Hear it in Polish">🔊</button>
             <div class="hint">Tap to flip</div>
           </div>
@@ -405,6 +440,8 @@
             <div class="side" id="fcBackSide"></div>
             <div class="term" id="fcBackTerm"></div>
             <div class="pr" id="fcBackPr"></div>
+            <div class="fc-tags" id="fcBackTags"></div>
+            <div class="fc-conj" id="fcBackConj"></div>
             <button class="fc-speak hidden" id="fcBackSpeak" title="Hear it in Polish">🔊</button>
             <div class="hint">Did you get it right?</div>
           </div>
@@ -496,13 +533,14 @@
     <p class="lead">Every word in the course and how well you know it. Status is driven by your flashcard reviews —
       keep practicing and watch words move from gray to green.</p>
     <div class="wl-controls">
-      <input id="wlSearch" placeholder="Search Polish or English…">
+      <input id="wlSearch" placeholder="Search Polish, English or tag…">
       <div class="seg" id="wlSort">
         <button data-sort="file" class="on">List order</button>
         <button data-sort="needs">Needs work first</button>
       </div>
     </div>
     <div class="wl-filters" id="wlFilters"></div>
+    <div class="wl-filters" id="wlTags"></div>
     <table class="lb-table wl-table">
       <thead><tr>
         <th class="sortable" id="wlThPl">Polish <span class="arrow"></span></th>
@@ -597,20 +635,40 @@
     <h3>How to use it</h3>
     <p>Open a lesson, tap 🔊 to hear each word (your browser's Polish voice), and tap ✓ when you've learned it.
       Then take the lesson quiz. Your progress saves automatically on this device.</p>
+    <h3>Flashcards</h3>
+    <p>Self-graded spaced repetition over everything: lessons, the common-word bank, and verbs. Cards show
+      English first by default (switch direction or mix them in the setup). You can grade yourself with
+      <em>Got it / Missed it</em> at any time — flipping first is optional. Filter a session by deck or by
+      tag: any tags you've put on words in <code>words.js</code> show up as chips, and every verb automatically
+      carries the <code>verb</code> tag. The English side of a card lists the word's tags; the Polish side has
+      the audio.</p>
+    <h3>Verb cards</h3>
+    <p>Verbs come from <code>verbs.js</code> and get a richer card: the English meaning on one side, and on the
+      Polish side the aspect pair — imperfective and perfective — with full conjugations below (present tense
+      for the imperfective, future for the perfective). Every form on the card is tappable to hear it, with a
+      rough pronunciation guide underneath. The Verbs tab explains how the whole system works.</p>
     <h3>A note on pronunciation</h3>
     <p>The italic guides are rough English approximations. Polish stress almost always falls on the
       second-to-last syllable. Use the 🔊 button for the real thing.</p>
     <h3>Publish it for your team</h3>
-    <p>The app is two files that live side by side: <code>index.html</code> (the app) and <code>words.js</code>
-      (your editable vocabulary bank). To put it online for free with GitHub Pages: create a new public repository,
-      upload <strong>both</strong> <code>index.html</code> and <code>words.js</code>, then in
+    <p>The app is three files that live side by side: <code>index.html</code> (the app), <code>words.js</code>
+      (your editable vocabulary bank) and <code>verbs.js</code> (your editable verb bank). To put it online for free
+      with GitHub Pages: create a new public repository,
+      upload <strong>all three</strong> — <code>index.html</code>, <code>words.js</code> and <code>verbs.js</code> — then in
       <em>Settings → Pages</em> set the source to your main branch. Your team gets a public URL like
       <code>https://yourname.github.io/nuclear-polish/</code>. See <code>How to publish and share.md</code> for the
       full walkthrough.</p>
-    <h3>Adding your own words</h3>
+    <h3>Adding your own words and verbs</h3>
     <p>Open <code>words.js</code> in any text editor. It's an alphabetical list with <code>// — A —</code> letter
-      dividers — find the right letter, add a line like <code>["mostek","footbridge"]</code>, and save. The app
-      code never needs to change.</p>
+      dividers — find the right letter, add a line like <code>["mostek","footbridge"]</code>, and save. Add
+      optional tags after the English: <code>["deszcz","rain","weather"]</code> — they become filter chips in
+      the Word list and Flashcards. Watch the commas and quotes: one missing comma stops the whole file (and the
+      app's tabs) from loading.</p>
+    <p>Verbs live in <code>verbs.js</code>, one block per verb: the English meaning, the imperfective with its
+      six present-tense forms, and the perfective with its six future forms (or <code>null</code> if there's no
+      everyday perfective). The file header shows the exact format. Every verb is tagged <code>verb</code>
+      automatically; add extra tags like <code>tags:["work"]</code> if you want. The app code never needs to
+      change for either file.</p>
     <div class="row-actions">
       <button class="btn ghost small" id="exportProg">Export my progress</button>
       <button class="btn ghost small" id="resetAll">Reset all my progress</button>
@@ -621,6 +679,7 @@
 <footer>Nuklearny Polski · built for safe, clear communication in the control room · Powodzenia! 🍀</footer>
 
 <script src="words.js"></script>
+<script src="verbs.js"></script>
 <script>
 /* ---------------- COURSE DATA ---------------- */
 const LESSONS = [
@@ -905,7 +964,7 @@ function finishQuiz(){
 
 /* ---------------- FLASHCARDS + SPACED REPETITION ---------------- */
 const DAY = 86400000;
-const fc = { dir:"pl", mode:"due", deck:"all", limitType:"none", cardCount:20, timeMin:5 };
+const fc = { dir:"en", mode:"due", deck:"all", tags:[], limitType:"none", cardCount:20, timeMin:5 };
 const CARD_OPTS=[10,20,30,50], TIME_OPTS=[3,5,10,15];
 let session = null;
 
@@ -957,15 +1016,33 @@ function plPronounce(word){
 // every card has a stable key "lessonId:index"
 function allCards(){
   const out=[];
-  LESSONS.forEach(l=>l.words.forEach((w,i)=>out.push({key:l.id+":"+i, lid:l.id, i, w})));
+  LESSONS.forEach(l=>l.words.forEach((w,i)=>out.push({key:l.id+":"+i, lid:l.id, i, w, tags:[]})));
   // Common words are keyed by the Polish word itself (not list position), so that
   // inserting/reordering words in words.js never disturbs saved review history.
   // The pronunciation guide is generated automatically from the spelling.
-  COMMON_WORDS.forEach((w,i)=>out.push({key:"common:"+String(w[0]).toLowerCase(), lid:"common", i, w:[w[0],plPronounce(w[0]),w[1]]}));
+  // Anything after the English gloss in words.js (w[2], w[3], …) is an optional tag.
+  COMMON_WORDS.forEach((w,i)=>out.push({key:"common:"+String(w[0]).toLowerCase(), lid:"common", i, w:[w[0],plPronounce(w[0]),w[1]], tags:w.slice(2).map(t=>String(t).toLowerCase())}));
+  // Verbs from verbs.js: keyed by the imperfective, automatically tagged "verb".
+  // The Polish side shows the aspect pair; conjugations render below it on the card.
+  (typeof VERB_BANK!=="undefined" ? VERB_BANK : []).forEach((v,i)=>{
+    const pair = v.prf ? v.imp+" / "+v.prf : v.imp;
+    const pron = v.prf ? plPronounce(v.imp)+" · "+plPronounce(v.prf) : plPronounce(v.imp);
+    out.push({key:"verb:"+v.imp, lid:"verbs", i, w:[pair,pron,v.en],
+      tags:["verb"].concat((v.tags||[]).map(t=>String(t).toLowerCase())), verb:v});
+  });
   return out;
+}
+// Every distinct tag used across the vocabulary, with how many words carry it,
+// sorted by count (most-used first) then alphabetically.
+function allTags(){
+  const counts={};
+  allCards().forEach(c=>(c.tags||[]).forEach(t=>{ counts[t]=(counts[t]||0)+1; }));
+  return Object.keys(counts).sort((a,b)=> counts[b]-counts[a] || a.localeCompare(b))
+    .map(t=>[t,counts[t]]);
 }
 function lessonLabel(lid){
   if(lid==="common") return "Common words";
+  if(lid==="verbs") return "Verbs";
   const l=LESSONS.find(x=>x.id===lid);
   return l ? l.title.replace(/^\d+ · /,"") : lid;
 }
@@ -997,13 +1074,14 @@ function renderFcSetup(){
   // deck segmented control
   const deckBox=document.getElementById("fcDeck"); deckBox.innerHTML="";
   const decks=[["all","All words"]].concat(LESSONS.map(l=>[l.id, l.title.replace(/^\d+ · /,"")]))
-    .concat([["common","Common words"]]);
+    .concat([["common","Common words"],["verbs","Verbs"]]);
   decks.forEach(([id,label])=>{
     const b=document.createElement("button"); b.textContent=label; b.dataset.deck=id;
     if(id===fc.deck) b.classList.add("on");
     b.onclick=()=>{ fc.deck=id; renderFcSetup(); };
     deckBox.appendChild(b);
   });
+  renderFcTags();
   syncSeg("fcDir","dir",fc.dir); syncSeg("fcMode","mode",fc.mode);
   // session-length type + value
   document.querySelectorAll("#fcLimitType button").forEach(b=>{
@@ -1042,9 +1120,44 @@ function syncSeg(boxId, prop, val){
     b.onclick=()=>{ fc[prop]=b.dataset[prop]; renderFcSetup(); };
   });
 }
+// Tag chips for the flashcard setup: multi-select, so choosing several tags
+// studies the UNION of their words (e.g. "calendar" + "weather" together).
+function renderFcTags(){
+  const box=document.getElementById("fcTags"); const field=document.getElementById("fcTagField");
+  if(!box) return;
+  box.innerHTML="";
+  const tags=allTags();
+  if(!tags.length){ if(field) field.style.display="none"; return; }
+  if(field) field.style.display="";
+  // drop any selected tags that no longer exist in the vocabulary
+  const valid=new Set(tags.map(t=>t[0]));
+  fc.tags=fc.tags.filter(t=>valid.has(t));
+  // "All (no tag filter)" clears the selection
+  const clear=document.createElement("div");
+  clear.className="wl-chip tag-clear"+(fc.tags.length? "":" on");
+  clear.textContent="All words";
+  clear.onclick=()=>{ fc.tags=[]; renderFcSetup(); };
+  box.appendChild(clear);
+  tags.forEach(([t,n])=>{
+    const c=document.createElement("div");
+    const on=fc.tags.includes(t);
+    c.className="wl-chip"+(on?" on":"");
+    c.innerHTML=`${t} <span class="n">${n}</span>`;
+    c.onclick=()=>{
+      if(on) fc.tags=fc.tags.filter(x=>x!==t); else fc.tags=fc.tags.concat(t);
+      renderFcSetup();
+    };
+    box.appendChild(c);
+  });
+}
 function deckCards(){
   const all=allCards();
-  return fc.deck==="all" ? all : all.filter(c=>c.lid===fc.deck);
+  let cards = fc.deck==="all" ? all : all.filter(c=>c.lid===fc.deck);
+  // Optional tag filter: keep cards carrying ANY of the selected tags (union).
+  if(fc.tags && fc.tags.length){
+    cards = cards.filter(c=>(c.tags||[]).some(t=>fc.tags.includes(t)));
+  }
+  return cards;
 }
 
 document.getElementById("fcStart").onclick=()=>{
@@ -1086,6 +1199,18 @@ function updateCounter(){
   }
   document.getElementById("fcCounter").textContent=txt;
 }
+const FC_PERSONS=["ja","ty","on/ona","my","wy","oni"];
+function verbConjHTML(v){
+  // every Polish form is tappable (🔊) and shows its pronunciation guide below
+  const say=(w,cls)=>`<span class="fc-say ${cls||""}" data-say="${w}">${w}<span class="ico">🔊</span></span>`;
+  const col=(inf,label,forms)=> (inf&&forms)
+    ? `<div class="fc-conj-col">
+        <b>${say(inf)}</b><u>${plPronounce(inf)}</u><i>${label}</i>
+        ${forms.map((f,k)=>`<span class="fc-form"><em>${FC_PERSONS[k]}</em><span class="ff">${say(f)}<u>${plPronounce(f)}</u></span></span>`).join("")}
+      </div>`
+    : "";
+  return col(v.imp,"imperfective · present",v.present)+col(v.prf,"perfective · future",v.future);
+}
 function showCard(){
   if(session.timed && Date.now()>=session.endTime) return finishSession();
   if(session.i>=session.queue.length) return finishSession();
@@ -1094,7 +1219,7 @@ function showCard(){
   const dir=curDir(); session.curDir=dir;
   const cardEl=document.getElementById("fcCard");
   cardEl.classList.remove("flipped");
-  document.getElementById("fcGrade").classList.add("hidden");
+  document.getElementById("fcGrade").classList.remove("hidden");
   const front = dir==="pl" ? {side:"Polish",term:pl,pr:pr} : {side:"English",term:en,pr:""};
   const back  = dir==="pl" ? {side:"English",term:en,pr:""} : {side:"Polish",term:pl,pr:pr};
   document.getElementById("fcFrontSide").textContent=front.side;
@@ -1103,11 +1228,28 @@ function showCard(){
   document.getElementById("fcBackSide").textContent=back.side;
   document.getElementById("fcBackTerm").textContent=back.term;
   document.getElementById("fcBackPr").textContent=back.pr;
+  // tag chips on whichever face shows English
+  const fTags=document.getElementById("fcFrontTags"), bTags=document.getElementById("fcBackTags");
+  fTags.innerHTML=""; bTags.innerHTML="";
+  (dir==="en" ? fTags : bTags).innerHTML=(card.tags||[]).map(t=>`<span>${t}</span>`).join("");
+  // verb cards: conjugation tables on whichever face shows Polish
+  const v=card.verb;
+  cardEl.classList.toggle("verb", !!v);
+  const fConj=document.getElementById("fcFrontConj"), bConj=document.getElementById("fcBackConj");
+  fConj.innerHTML=""; bConj.innerHTML="";
+  if(v){
+    const box = dir==="pl" ? fConj : bConj;
+    box.innerHTML = verbConjHTML(v);
+    box.querySelectorAll(".fc-say").forEach(el=>{
+      el.onclick=(e)=>{ e.stopPropagation(); speak(el.dataset.say); };
+    });
+  }
   // speaker icon lives on whichever face shows Polish
   const frontSpk=document.getElementById("fcFrontSpeak"), backSpk=document.getElementById("fcBackSpeak");
   frontSpk.classList.toggle("hidden", dir!=="pl");
   backSpk.classList.toggle("hidden", dir!=="en");
-  const speakPolish=(e)=>{ e.stopPropagation(); speak(pl); };
+  const speakText = v ? v.imp+(v.prf ? ", "+v.prf : "") : pl;
+  const speakPolish=(e)=>{ e.stopPropagation(); speak(speakText); };
   frontSpk.onclick=speakPolish; backSpk.onclick=speakPolish;
   updateCounter();
   const d=cardData(card.key);
@@ -1120,12 +1262,9 @@ document.getElementById("fcCard").onclick=()=>{
   const el=document.getElementById("fcCard");
   const nowFlipped = !el.classList.contains("flipped");   // toggle — flip both ways
   el.classList.toggle("flipped", nowFlipped);
-  // grade buttons only while the answer side is showing
-  document.getElementById("fcGrade").classList.toggle("hidden", !nowFlipped);
 };
 function doGrade(gotIt){
   const card=session.queue[session.i];
-  if(!document.getElementById("fcCard").classList.contains("flipped")) return; // must flip first
   grade(card.key, gotIt);
   session.seen++; gotIt?session.got++:session.missed++;
   if(!gotIt){
@@ -1144,6 +1283,11 @@ function finishSession(){
   speechSynthesis.cancel();   // stop any audio still playing/queued
   const cardEl=document.getElementById("fcCard");
   cardEl.classList.remove("flipped");
+  cardEl.classList.remove("verb");
+  document.getElementById("fcFrontConj").innerHTML="";
+  document.getElementById("fcBackConj").innerHTML="";
+  document.getElementById("fcFrontTags").innerHTML="";
+  document.getElementById("fcBackTags").innerHTML="";
   document.getElementById("fcGrade").classList.add("hidden");
   document.getElementById("fcCounter").textContent="Session complete 🎉";
   document.getElementById("fcFrontSide").textContent="";
@@ -1163,7 +1307,7 @@ function finishSession(){
 /* ---------------- WORD LIST ---------------- */
 const STATUS_LABEL={notstarted:"Not started",struggle:"Struggle",learning:"Learning",mastered:"Mastered"};
 const STATUS_ORDER={struggle:0,learning:1,notstarted:2,mastered:3};
-const wordFilter={status:"all", q:"", sort:"file", dir:1};
+const wordFilter={status:"all", q:"", sort:"file", dir:1, tags:[]};
 
 function wordStatus(card){
   const d=cardData(card.key);
@@ -1181,6 +1325,7 @@ function renderWords(){
     const d=cardData(c.key), total=d.right+d.wrong;
     return {idx, pl:c.w[0],pr:c.w[1],en:c.w[2],
       lesson:lessonLabel(c.lid),
+      tags:c.tags||[],
       st:wordStatus(c),
       acc: total? Math.round(d.right/total*100) : null,
       right:d.right, wrong:d.wrong};
@@ -1197,6 +1342,34 @@ function renderWords(){
       c.onclick=()=>{ wordFilter.status=k; renderWords(); };
       fbox.appendChild(c);
     });
+  // tag filter chips (multi-select union). Only shown once tags exist.
+  const tbox=document.getElementById("wlTags"); tbox.innerHTML="";
+  const tags=allTags();
+  const validTags=new Set(tags.map(t=>t[0]));
+  wordFilter.tags=wordFilter.tags.filter(t=>validTags.has(t));
+  if(tags.length){
+    const clear=document.createElement("div");
+    clear.className="wl-chip tag-clear"+(wordFilter.tags.length?"":" on");
+    clear.innerHTML=`Tags:`;
+    clear.style.cursor="default";
+    tbox.appendChild(clear);
+    tags.forEach(([t,n])=>{
+      const on=wordFilter.tags.includes(t);
+      const c=document.createElement("div"); c.className="wl-chip"+(on?" on":"");
+      c.innerHTML=`${t} <span class="n">${n}</span>`;
+      c.onclick=()=>{
+        if(on) wordFilter.tags=wordFilter.tags.filter(x=>x!==t); else wordFilter.tags=wordFilter.tags.concat(t);
+        renderWords();
+      };
+      tbox.appendChild(c);
+    });
+    if(wordFilter.tags.length){
+      const reset=document.createElement("div"); reset.className="wl-chip tag-clear";
+      reset.textContent="✕ clear";
+      reset.onclick=()=>{ wordFilter.tags=[]; renderWords(); };
+      tbox.appendChild(reset);
+    }
+  }
   // sort buttons (lesson / needs work)
   document.querySelectorAll("#wlSort button").forEach(b=>{
     b.classList.toggle("on", b.dataset.sort===wordFilter.sort);
@@ -1210,8 +1383,10 @@ function renderWords(){
   thEn.onclick=()=>{ wordFilter.dir = wordFilter.sort==="en" ? -wordFilter.dir : 1; wordFilter.sort="en"; renderWords(); };
   // filter + search
   let view=rows.filter(r=> wordFilter.status==="all"||r.st===wordFilter.status);
+  // tag chips: keep rows carrying ANY selected tag (union)
+  if(wordFilter.tags.length) view=view.filter(r=>r.tags.some(t=>wordFilter.tags.includes(t)));
   const q=wordFilter.q.trim().toLowerCase();
-  if(q) view=view.filter(r=>r.pl.toLowerCase().includes(q)||r.en.toLowerCase().includes(q));
+  if(q) view=view.filter(r=>r.pl.toLowerCase().includes(q)||r.en.toLowerCase().includes(q)||r.tags.some(t=>t.includes(q)));
   if(wordFilter.sort==="file") view.sort((a,b)=>a.idx-b.idx);   // source order: lessons, then words.js order
   else if(wordFilter.sort==="needs") view.sort((a,b)=>STATUS_ORDER[a.st]-STATUS_ORDER[b.st]);
   else if(wordFilter.sort==="pl") view.sort((a,b)=>a.pl.localeCompare(b.pl,"pl")*wordFilter.dir);
@@ -1221,12 +1396,20 @@ function renderWords(){
   if(!view.length){ body.innerHTML=`<tr><td colspan="5" class="wl-empty">No words match.</td></tr>`; return; }
   view.forEach(r=>{
     const tr=document.createElement("tr");
+    const tagHtml=r.tags.map(t=>`<span class="wl-tag${wordFilter.tags.includes(t)?" on":""}" data-tag="${t}">${t}</span>`).join("");
     tr.innerHTML=`
       <td><strong>${r.pl}</strong><div class="pr">${r.pr}</div></td>
-      <td>${r.en}</td>
+      <td>${r.en}${tagHtml?`<div>${tagHtml}</div>`:""}</td>
       <td class="acc">${r.lesson}</td>
       <td class="acc">${r.acc===null?"—":r.acc+"%"} ${r.right+r.wrong?`<span style="opacity:.6">(${r.right}✓/${r.wrong}✗)</span>`:""}</td>
       <td><span class="status ${r.st}"><span class="dot"></span>${STATUS_LABEL[r.st]}</span></td>`;
+    // clicking an inline tag pill toggles it in the filter
+    tr.querySelectorAll(".wl-tag").forEach(el=>el.onclick=()=>{
+      const t=el.dataset.tag;
+      if(wordFilter.tags.includes(t)) wordFilter.tags=wordFilter.tags.filter(x=>x!==t);
+      else wordFilter.tags=wordFilter.tags.concat(t);
+      renderWords();
+    });
     body.appendChild(tr);
   });
 }
