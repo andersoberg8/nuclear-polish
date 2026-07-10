@@ -87,7 +87,7 @@ const COMMON_WORDS = [
   ["cieszyć się",            "to be glad"],
   ["ciężki",                 "heavy / hard"],
   ["ciocia",                 "aunt",                  "family"],
-  ["ciśnienie",              "pressure",              "nuclear","weather"]
+  ["ciśnienie",              "pressure",              "nuclear","weather"],
   ["co",                     "what"],
   ["coś",                    "something"],
   ["córka",                  "daughter",              "family"],
