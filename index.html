@@ -388,6 +388,44 @@
     nav.tabs button{display:none}
     .tab-select{display:block}
   }
+  /* aspect tab */
+  .say{cursor:pointer;border-bottom:1px dotted var(--line)}
+  .say:hover{color:var(--accent)}
+  .asp-clues{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:14px 0}
+  .asp-clue{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .asp-clue h4{margin:0 0 8px;font-size:.95rem;text-transform:uppercase;letter-spacing:.05em}
+  .asp-clue.imp h4{color:var(--accent2)} .asp-clue.prf h4{color:var(--accent)}
+  .asp-clue ul{margin:0;padding-left:18px;color:#cfe0dd}
+  .asp-clue li{margin:5px 0;font-size:.9rem}
+  .asp-clue li i{color:var(--muted);font-style:normal;font-size:.82rem}
+  .asp-tagline{display:inline-block;font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+    padding:2px 8px;border-radius:12px;margin-right:8px;vertical-align:middle}
+  .asp-tagline.imp{background:#0f3a47;color:#8fd8e8}
+  .asp-tagline.prf{background:#0e332e;color:#84e6d3}
+  .asp-why{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--panel2);font-size:.92rem;line-height:1.5}
+  .match-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:560px;margin-top:12px}
+  .match-btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;
+    padding:11px 12px;font-size:1rem;font-weight:600;cursor:pointer;transition:.12s}
+  .match-btn:hover{border-color:var(--accent2)}
+  .match-btn.sel{border-color:var(--accent2);background:#0f3a47}
+  .match-btn.done{background:#0e332e;border-color:var(--accent);color:#84e6d3;cursor:default}
+  .match-btn.bad{background:#3b1c1f;border-color:var(--danger)}
+  /* flashcard meaning emoji (answer side) */
+  .fc-emoji{font-size:2rem;line-height:1.25;letter-spacing:.1em;margin-top:2px}
+  .fc-emoji:empty{display:none}
+  /* noun gender colors — applied to whichever face shows the Polish word.
+     Tag a word "m", "f" or "n" in words.js and the Polish side turns
+     baby blue (masculine), pink (feminine) or pale green (neuter). */
+  .flashcard .face.gm{background:linear-gradient(180deg,#cde4f7,#b3d5f0);border-color:#79aed9}
+  .flashcard .face.gf{background:linear-gradient(180deg,#fadbe8,#f5c4d8);border-color:#df8fb2}
+  .flashcard .face.gn{background:linear-gradient(180deg,#d9f2de,#c1e8ca);border-color:#8bc99a}
+  .flashcard .face.gm,.flashcard .face.gf,.flashcard .face.gn{color:#132325}
+  .flashcard .face.gm .term,.flashcard .face.gf .term,.flashcard .face.gn .term{color:#0b1a1c}
+  .flashcard .face.gm .pr,.flashcard .face.gf .pr,.flashcard .face.gn .pr,
+  .flashcard .face.gm .side,.flashcard .face.gf .side,.flashcard .face.gn .side,
+  .flashcard .face.gm .hint,.flashcard .face.gf .hint,.flashcard .face.gn .hint{color:#3c5a60}
+  .flashcard .face.gm .fc-tags span,.flashcard .face.gf .fc-tags span,.flashcard .face.gn .fc-tags span{
+    background:rgba(255,255,255,.55);border-color:rgba(0,0,0,.18);color:#2c4449}
 </style>
 </head>
 <body>
@@ -418,6 +456,7 @@
   <button data-tab="history">History</button>
   <button data-tab="sounds">Pronunciation</button>
   <button data-tab="verbs">Verbs</button>
+  <button data-tab="aspect">Aspect</button>
   <button data-tab="numbers">Numbers</button>
   <button data-tab="words">Word list</button>
   <button data-tab="flashcards">Flashcards</button>
@@ -478,6 +517,14 @@
         <label>Tags <span class="fc-tag-hint">— optional, pick one or more to study just those words</span></label>
         <div class="wl-filters" id="fcTags"></div>
       </div>
+      <div class="fc-field" id="fcVerbField">
+        <label>Verb cards <span class="fc-tag-hint">— word-only and conjugation cards are tracked separately</span></label>
+        <div class="seg" id="fcVerbCards">
+          <button data-verbcards="word" class="on">Word only</button>
+          <button data-verbcards="conj">With conjugations</button>
+          <button data-verbcards="both">Both</button>
+        </div>
+      </div>
       <div class="fc-field">
         <label>Show first</label>
         <div class="seg" id="fcDir">
@@ -532,10 +579,10 @@
             <div class="side" id="fcBackSide"></div>
             <div class="term" id="fcBackTerm"></div>
             <div class="pr" id="fcBackPr"></div>
+            <div class="fc-emoji" id="fcBackEmoji"></div>
             <div class="fc-tags" id="fcBackTags"></div>
             <div class="fc-conj" id="fcBackConj"></div>
             <button class="fc-speak hidden" id="fcBackSpeak" title="Hear it in Polish">🔊</button>
-            <div class="hint">Did you get it right?</div>
           </div>
         </div>
       </div>
@@ -701,6 +748,93 @@
     </div>
   </section>
 
+  <!-- ASPECT -->
+  <section id="view-aspect" class="hidden">
+    <h2 class="title">Verb aspect · <em>Aspekt</em></h2>
+    <p class="lead">The single biggest difference between Polish and English verbs. English has one verb "to read";
+      Polish has two — <span class="say">czytać</span> and <span class="say">przeczytać</span> — and choosing between
+      them tells your listener whether the action was a <em>process</em> or a <em>done deal</em>. Tap any Polish word to hear it.</p>
+
+    <div class="factbox">
+      <div><b>🎬 Film</b><span>Imperfective = the action unfolding — ongoing, repeated, habitual</span></div>
+      <div><b>📸 Photo</b><span>Perfective = the finished snapshot — one action, complete, with a result</span></div>
+      <div><b>2-for-1</b><span>Most verbs come as a pair — learn them together</span></div>
+      <div><b>No present</b><span>Perfective verbs have no present tense — "now" is never finished</span></div>
+    </div>
+
+    <div class="snd-sec"><h3>The big idea</h3>
+      <p class="blurb">Ask yourself one question: <b>am I talking about the doing, or about the getting-done?</b>
+        If the action is in progress, repeats, or you care about how long it went on — use the
+        <b>imperfective</b>. If it happened once, finished, and left a result — use the <b>perfective</b>.
+        That's the entire system; everything else is detail.</p>
+      <div class="vb-wrap"><table class="vb-table">
+        <tr><th></th><th>Imperfective <i style="font-style:normal">🎬</i></th><th>Perfective <i style="font-style:normal">📸</i></th></tr>
+        <tr><td class="vb-person">Answers</td><td>What was/is happening?</td><td>What got done?</td></tr>
+        <tr><td class="vb-person">Tenses</td><td>past · present · future (będę + verb)</td><td>past · future only — <b>no present</b></td></tr>
+        <tr><td class="vb-person">Typical use</td><td>habits, routines, duration, background</td><td>single completed events, results, sequences</td></tr>
+        <tr><td class="vb-person">Feels like</td><td>a film clip</td><td>a photo of the result</td></tr>
+      </table></div>
+    </div>
+
+    <div class="snd-sec"><h3>How pairs are built</h3>
+      <p class="blurb">Three patterns cover nearly every pair. There's no shortcut for which prefix a verb takes — learn each pair as one vocabulary item.</p>
+      <div class="vb-wrap"><table class="vb-table">
+        <tr><th>Pattern</th><th>Imperfective → Perfective</th></tr>
+        <tr><td class="vb-person">Add a prefix</td><td><span class="say">pisać</span> → <span class="say">napisać</span> &nbsp;·&nbsp; <span class="say">czytać</span> → <span class="say">przeczytać</span> &nbsp;·&nbsp; <span class="say">robić</span> → <span class="say">zrobić</span></td></tr>
+        <tr><td class="vb-person">Change the stem</td><td><span class="say">kupować</span> → <span class="say">kupić</span> &nbsp;·&nbsp; <span class="say">zamykać</span> → <span class="say">zamknąć</span> &nbsp;·&nbsp; <span class="say">kończyć</span> → <span class="say">skończyć</span></td></tr>
+        <tr><td class="vb-person">Different word entirely</td><td><span class="say">brać</span> → <span class="say">wziąć</span> &nbsp;·&nbsp; <span class="say">mówić</span> → <span class="say">powiedzieć</span> &nbsp;·&nbsp; <span class="say">widzieć</span> → <span class="say">zobaczyć</span></td></tr>
+      </table></div>
+    </div>
+
+    <div class="snd-sec"><h3>Signal words</h3>
+      <p class="blurb">Certain words in a sentence almost always point at one aspect. Spot these and the choice makes itself:</p>
+      <div class="asp-clues">
+        <div class="asp-clue imp"><h4>→ Imperfective 🎬</h4><ul>
+          <li><span class="say">zawsze</span> <i>— always</i></li>
+          <li><span class="say">często</span> <i>— often</i></li>
+          <li><span class="say">codziennie</span> <i>— every day</i></li>
+          <li><span class="say">zwykle</span> <i>— usually</i></li>
+          <li><span class="say" data-pl="przez godzinę">przez godzinę</span> <i>— for an hour (duration)</i></li>
+          <li><span class="say">teraz</span> <i>— right now</i></li>
+        </ul></div>
+        <div class="asp-clue prf"><h4>→ Perfective 📸</h4><ul>
+          <li><span class="say">nagle</span> <i>— suddenly</i></li>
+          <li><span class="say">wreszcie</span> <i>— finally</i></li>
+          <li><span class="say">już</span> <i>— already (done)</i></li>
+          <li><span class="say">raz</span> <i>— once, one time</i></li>
+          <li><span class="say">cały</span> <i>— the whole thing (drunk the WHOLE bottle)</i></li>
+          <li><i>a specific completed moment — yesterday at 14:00</i></li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="snd-sec"><h3>Same sentence, two meanings</h3>
+      <div class="quote"><div class="pl say" data-pl="Sprawdzałem ciśnienie przez całą zmianę.">Sprawdzałem ciśnienie przez całą zmianę. 🔊</div>
+        <div class="en">I was checking the pressure all shift long. — <b>imperfective</b>: the ongoing process</div></div>
+      <div class="quote"><div class="pl say" data-pl="Sprawdziłem ciśnienie — jest w normie.">Sprawdziłem ciśnienie — jest w normie. 🔊</div>
+        <div class="en">I've checked the pressure — it's within limits. — <b>perfective</b>: done, with a result</div></div>
+      <div class="snd-note"><b>The future-tense trap.</b> <code>piszę</code> = I am writing (imperfective present).
+        <code>napiszę</code> <em>looks</em> like a present form but means <b>I will write</b> — a perfective verb's
+        "present" is always future. For an ongoing future ("I will be writing"), use <code>będę pisać</code>.</div>
+    </div>
+
+    <div class="num-section"><h3>Drill 1 · Which verb fits?</h3>
+      <div class="sub">Read the sentence, decide: process or completed result? Then pick the verb. You'll get an explanation either way.</div>
+      <div class="quiz" id="aspQuizBox">
+        <div class="row-actions" style="margin:0"><button class="btn" id="aspStart">Start the drill</button></div>
+      </div>
+    </div>
+
+    <div class="num-section"><h3>Drill 2 · Match the pairs</h3>
+      <div class="sub">Click an imperfective verb on the left, then its perfective partner on the right. Six random verbs from your verb bank each round.</div>
+      <div class="quiz">
+        <div class="fc-stat" id="mgStat" style="justify-content:flex-start"></div>
+        <div class="match-grid" id="mgGrid"></div>
+        <div class="row-actions" style="margin:14px 0 0"><button class="btn ghost" id="mgNew">New round</button></div>
+      </div>
+    </div>
+  </section>
+
   <!-- HISTORY -->
   <section id="view-history" class="hidden">
     <div class="hist">
@@ -786,7 +920,8 @@
     <p>Open a lesson, tap 🔊 to hear each word (your browser's Polish voice), and tap ✓ when you've learned it.
       Then take the lesson quiz. Your progress saves automatically on this device.</p>
     <h3>Flashcards</h3>
-    <p>Self-graded spaced repetition over everything: lessons, the common-word bank, and verbs. Cards show
+    <p>Self-graded spaced repetition. Every card comes from one of two files: <code>words.js</code> (words and
+      phrases, including all lesson vocabulary) or <code>verbs.js</code> (verbs). Cards show
       English first by default (switch direction or mix them in the setup). You can grade yourself with
       <em>Got it / Missed it</em> at any time — flipping first is optional. Filter a session by deck or by
       tag: any tags you've put on words in <code>words.js</code> show up as chips, and every verb automatically
@@ -811,14 +946,21 @@
     <h3>Adding your own words and verbs</h3>
     <p>Open <code>words.js</code> in any text editor. It's an alphabetical list with <code>// — A —</code> letter
       dividers — find the right letter, add a line like <code>["mostek","footbridge"]</code>, and save. Add
-      optional tags after the English: <code>["deszcz","rain","weather"]</code> — they become filter chips in
-      the Word list and Flashcards. Watch the commas and quotes: one missing comma stops the whole file (and the
-      app's tabs) from loading.</p>
+      optional extras after the English, recognized by what they are, not their position:
+      <code>"m"</code>/<code>"f"</code>/<code>"n"</code> marks noun gender and colors the Polish side of that
+      word's flashcard (<strong>baby blue = masculine, pink = feminine, pale green = neuter</strong>); an emoji
+      like <code>"🌧️"</code> appears on the answer side of the card; and anything else is a topic tag that
+      becomes a filter chip in the Word list and Flashcards. A full entry looks like
+      <code>["deszcz","rain","m","🌧️","weather"]</code>. Leave non-nouns without a gender tag. Watch the commas
+      and quotes: one missing comma stops the whole file (and the app's tabs) from loading.</p>
     <p>Verbs live in <code>verbs.js</code>, one block per verb: the English meaning, the imperfective with its
       six present-tense forms, and the perfective with its six future forms (or <code>null</code> if there's no
-      everyday perfective). The file header shows the exact format. Every verb is tagged <code>verb</code>
-      automatically; add extra tags like <code>tags:["work"]</code> if you want. The app code never needs to
-      change for either file.</p>
+      everyday perfective). The file header shows the exact format. Every verb becomes <em>two</em> flashcards,
+      tracked separately: a word-only card and a conjugation card — choose which to study with the
+      <em>Verb cards</em> toggle in Flashcards. Every verb is tagged <code>verb</code> automatically (conjugation
+      cards also get <code>conjugation</code>); add extra tags like <code>tags:["work"]</code> if you want, and an
+      <code>emoji:"🔨"</code> field for the answer side of the card. The
+      app code never needs to change for either file.</p>
     <div class="row-actions">
       <button class="btn ghost small" id="exportProg">Export my progress</button>
       <button class="btn ghost small" id="resetAll">Reset all my progress</button>
@@ -960,7 +1102,7 @@ function speak(text){
 }
 
 /* ---------------- NAV ---------------- */
-const views = ["lessons","lesson","quiz","flashcards","fcstage","numbers","speak","speakstage","sounds","verbs","words","leaderboard","history","about"];
+const views = ["lessons","lesson","quiz","flashcards","fcstage","numbers","aspect","speak","speakstage","sounds","verbs","words","leaderboard","history","about"];
 function show(v){ views.forEach(x=>document.getElementById("view-"+x).classList.toggle("hidden",x!==v)); window.scrollTo(0,0); }
 document.querySelectorAll("nav.tabs button").forEach(b=>{
   b.onclick=()=>{
@@ -970,6 +1112,7 @@ document.querySelectorAll("nav.tabs button").forEach(b=>{
     if(t==="lessons"){ renderLessons(); show("lessons"); }
     if(t==="flashcards"){ renderFcSetup(); show("flashcards"); }
     if(t==="numbers"){ renderNumbers(); show("numbers"); }
+    if(t==="aspect"){ renderAspect(); show("aspect"); }
     if(t==="speak"){ renderSpeakSetup(); show("speak"); }
     if(t==="sounds"){ renderSounds(); show("sounds"); }
     if(t==="verbs"){ renderVerbs(); show("verbs"); }
@@ -1130,8 +1273,8 @@ function finishQuiz(){
 
 /* ---------------- FLASHCARDS + SPACED REPETITION ---------------- */
 const DAY = 86400000;
-const fc = { dir:"en", mode:"due", deck:"all", tags:[], limitType:"none", cardCount:20, timeMin:5 };
-const CARD_OPTS=[10,20,30,50], TIME_OPTS=[3,5,10,15];
+const fc = { dir:"en", mode:"due", deck:"all", tags:[], verbcards:"word", limitType:"none", cardCount:20, timeMin:5 };
+const CARD_OPTS=[10,20,30,50,100], TIME_OPTS=[3,5,10,15];
 let session = null;
 
 /* ---- auto pronunciation guide ----
@@ -1179,22 +1322,50 @@ function plPronounce(word){
   }).filter(Boolean).join(" ");
 }
 
-// every card has a stable key "lessonId:index"
+// Special word extras in words.js — recognized by content, not position:
+//   "m"/"f"/"n"  -> noun gender (colors the Polish face of flashcards)
+//   an emoji     -> meaning emoji (shown on the answer side of the card)
+//   anything else-> a topic tag (filter chips)
+// Gender and emoji are kept OUT of the topic-tag chips.
+const GENDER_TAGS={m:"masculine",f:"feminine",n:"neuter"};
+const GENDER_PL={m:"męski",f:"żeński",n:"nijaki"};   // shown on the Polish face
+const EMOJI_RE=/[\u{1F000}-\u{1FAFF}\u{2100}-\u{2BFF}\u{FE0F}\u{20E3}]/u;
+function splitMeta(raw){
+  let gender=null, emoji="", tags=[];
+  raw.forEach(t=>{
+    if(GENDER_TAGS[t]) gender=gender||t;
+    else if(EMOJI_RE.test(t)) emoji=emoji||t;
+    else tags.push(t);
+  });
+  return {gender,emoji,tags};
+}
+// every card has a stable key. Flashcards draw from exactly TWO sources:
+// words.js (COMMON_WORDS) and verbs.js (VERB_BANK). Lesson vocabulary in
+// LESSONS is for the Lessons tab and quizzes only — every lesson word also
+// lives in words.js, which is where its flashcard comes from.
 function allCards(){
   const out=[];
-  LESSONS.forEach(l=>l.words.forEach((w,i)=>out.push({key:l.id+":"+i, lid:l.id, i, w, tags:[]})));
   // Common words are keyed by the Polish word itself (not list position), so that
   // inserting/reordering words in words.js never disturbs saved review history.
   // The pronunciation guide is generated automatically from the spelling.
   // Anything after the English gloss in words.js (w[2], w[3], …) is an optional tag.
-  COMMON_WORDS.forEach((w,i)=>out.push({key:"common:"+String(w[0]).toLowerCase(), lid:"common", i, w:[w[0],plPronounce(w[0]),w[1]], tags:w.slice(2).map(t=>String(t).toLowerCase())}));
-  // Verbs from verbs.js: keyed by the imperfective, automatically tagged "verb".
-  // The Polish side shows the aspect pair; conjugations render below it on the card.
+  COMMON_WORDS.forEach((w,i)=>{
+    const gt=splitMeta(w.slice(2).map(t=>String(t).toLowerCase()));
+    out.push({key:"common:"+String(w[0]).toLowerCase(), lid:"common", i, w:[w[0],plPronounce(w[0]),w[1]], tags:gt.tags, gender:gt.gender, emoji:gt.emoji});
+  });
+  // Verbs from verbs.js: each verb becomes TWO separately-tracked cards, both
+  // keyed by the imperfective — a word-only card (just the aspect pair) and a
+  // conjugation card (same pair plus the full conjugation tables). Pick which
+  // to study with the "Verb cards" toggle on the flashcard setup screen.
   (typeof VERB_BANK!=="undefined" ? VERB_BANK : []).forEach((v,i)=>{
     const pair = v.prf ? v.imp+" / "+v.prf : v.imp;
     const pron = v.prf ? plPronounce(v.imp)+" · "+plPronounce(v.prf) : plPronounce(v.imp);
-    out.push({key:"verb:"+v.imp, lid:"verbs", i, w:[pair,pron,v.en],
-      tags:["verb"].concat((v.tags||[]).map(t=>String(t).toLowerCase())), verb:v});
+    const extra = splitMeta((v.tags||[]).map(t=>String(t).toLowerCase()));
+    const vemoji = extra.emoji || v.emoji || "";
+    out.push({key:"verbword:"+v.imp, lid:"verbs", i, w:[pair,pron,v.en],
+      tags:["verb"].concat(extra.tags), gender:extra.gender, emoji:vemoji, verb:v, vkind:"word"});
+    out.push({key:"verbconj:"+v.imp, lid:"verbs", i, w:[pair,pron,v.en],
+      tags:["verb","conjugation"].concat(extra.tags), gender:extra.gender, emoji:vemoji, verb:v, vkind:"conj"});
   });
   return out;
 }
@@ -1239,8 +1410,7 @@ function grade(key, gotIt){
 function renderFcSetup(){
   // deck segmented control
   const deckBox=document.getElementById("fcDeck"); deckBox.innerHTML="";
-  const decks=[["all","All words"]].concat(LESSONS.map(l=>[l.id, l.title.replace(/^\d+ · /,"")]))
-    .concat([["common","Common words"],["verbs","Verbs"]]);
+  const decks=[["all","All words"],["common","Common words"],["verbs","Verbs"]];
   decks.forEach(([id,label])=>{
     const b=document.createElement("button"); b.textContent=label; b.dataset.deck=id;
     if(id===fc.deck) b.classList.add("on");
@@ -1249,6 +1419,10 @@ function renderFcSetup(){
   });
   renderFcTags();
   syncSeg("fcDir","dir",fc.dir); syncSeg("fcMode","mode",fc.mode);
+  syncSeg("fcVerbCards","verbcards",fc.verbcards);
+  // the verb-cards toggle only matters when the pool can contain verbs
+  const vf=document.getElementById("fcVerbField");
+  if(vf) vf.style.display = (fc.deck==="all"||fc.deck==="verbs") ? "" : "none";
   // session-length type + value
   document.querySelectorAll("#fcLimitType button").forEach(b=>{
     b.classList.toggle("on", b.dataset.limittype===fc.limitType);
@@ -1323,6 +1497,10 @@ function deckCards(){
   if(fc.tags && fc.tags.length){
     cards = cards.filter(c=>(c.tags||[]).some(t=>fc.tags.includes(t)));
   }
+  // Verb cards toggle: word-only cards, conjugation cards, or both
+  if(fc.verbcards!=="both"){
+    cards = cards.filter(c=>!c.vkind || c.vkind===fc.verbcards);
+  }
   return cards;
 }
 
@@ -1330,7 +1508,9 @@ document.getElementById("fcStart").onclick=()=>{
   let pool=deckCards();
   if(fc.mode==="due"){
     pool = pool.filter(c=>isDue(c.key));
-    // most overdue / hardest first
+    // shuffle first so ties (e.g. brand-new cards) come up in random order,
+    // then sort: most overdue / hardest first
+    pool = shuffle(pool);
     pool.sort((a,b)=> (cardData(a.key).due - cardData(b.key).due) || (cardData(a.key).ease - cardData(b.key).ease));
     if(!pool.length){ alert("Nothing is due right now — nice work! Switch to \"Practice all\" to study ahead."); return; }
   } else {
@@ -1386,20 +1566,31 @@ function showCard(){
   const cardEl=document.getElementById("fcCard");
   cardEl.classList.remove("flipped");
   document.getElementById("fcGrade").classList.remove("hidden");
-  const front = dir==="pl" ? {side:"Polish",term:pl,pr:pr} : {side:"English",term:en,pr:""};
-  const back  = dir==="pl" ? {side:"English",term:en,pr:""} : {side:"Polish",term:pl,pr:pr};
+  const front = dir==="pl" ? {side:"polski",term:pl,pr:pr} : {side:"angielski",term:en,pr:""};
+  const back  = dir==="pl" ? {side:"angielski",term:en,pr:""} : {side:"polski",term:pl,pr:pr};
+  // gender color + label on whichever face shows the Polish word
+  const frontFace=cardEl.querySelector(".front"), backFace=cardEl.querySelector(".back");
+  ["gm","gf","gn"].forEach(c=>{ frontFace.classList.remove(c); backFace.classList.remove(c); });
+  if(card.gender){
+    const plFace = dir==="pl" ? frontFace : backFace;
+    plFace.classList.add("g"+card.gender);
+    (dir==="pl" ? front : back).side = GENDER_PL[card.gender];
+  }
   document.getElementById("fcFrontSide").textContent=front.side;
   document.getElementById("fcFront").textContent=front.term;
   document.getElementById("fcFrontPr").textContent=front.pr;
   document.getElementById("fcBackSide").textContent=back.side;
   document.getElementById("fcBackTerm").textContent=back.term;
   document.getElementById("fcBackPr").textContent=back.pr;
+  // meaning emoji — always on the answer (back) face
+  const emo=card.emoji||"";
+  document.getElementById("fcBackEmoji").textContent=emo;
   // tag chips on whichever face shows English
   const fTags=document.getElementById("fcFrontTags"), bTags=document.getElementById("fcBackTags");
   fTags.innerHTML=""; bTags.innerHTML="";
   (dir==="en" ? fTags : bTags).innerHTML=(card.tags||[]).map(t=>`<span>${t}</span>`).join("");
-  // verb cards: conjugation tables on whichever face shows Polish
-  const v=card.verb;
+  // conjugation cards only: tables on whichever face shows Polish
+  const vb=card.verb, v = card.vkind==="conj" ? vb : null;
   cardEl.classList.toggle("verb", !!v);
   const fConj=document.getElementById("fcFrontConj"), bConj=document.getElementById("fcBackConj");
   fConj.innerHTML=""; bConj.innerHTML="";
@@ -1414,7 +1605,7 @@ function showCard(){
   const frontSpk=document.getElementById("fcFrontSpeak"), backSpk=document.getElementById("fcBackSpeak");
   frontSpk.classList.toggle("hidden", dir!=="pl");
   backSpk.classList.toggle("hidden", dir!=="en");
-  const speakText = v ? v.imp+(v.prf ? ", "+v.prf : "") : pl;
+  const speakText = vb ? vb.imp+(vb.prf ? ", "+vb.prf : "") : pl;
   const speakPolish=(e)=>{ e.stopPropagation(); speak(speakText); };
   frontSpk.onclick=speakPolish; backSpk.onclick=speakPolish;
   updateCounter();
@@ -1450,6 +1641,10 @@ function finishSession(){
   const cardEl=document.getElementById("fcCard");
   cardEl.classList.remove("flipped");
   cardEl.classList.remove("verb");
+  ["gm","gf","gn"].forEach(c=>{
+    cardEl.querySelector(".front").classList.remove(c);
+    cardEl.querySelector(".back").classList.remove(c);
+  });
   document.getElementById("fcFrontConj").innerHTML="";
   document.getElementById("fcBackConj").innerHTML="";
   document.getElementById("fcFrontTags").innerHTML="";
@@ -1461,7 +1656,7 @@ function finishSession(){
   document.getElementById("fcFrontPr").textContent="(Good job!)";
   document.querySelector("#fcCard .front .hint").textContent="";
   // clear the leftover card so nothing stale shows or speaks
-  ["fcBackSide","fcBackTerm","fcBackPr"].forEach(id=>document.getElementById(id).textContent="");
+  ["fcBackSide","fcBackTerm","fcBackPr","fcBackEmoji"].forEach(id=>document.getElementById(id).textContent="");
   const fSpk=document.getElementById("fcFrontSpeak"), bSpk=document.getElementById("fcBackSpeak");
   fSpk.classList.add("hidden"); bSpk.classList.add("hidden");
   fSpk.onclick=null; bSpk.onclick=null;
@@ -1731,6 +1926,140 @@ function npCheck(){
   btn.textContent="Next →";
 }
 npSync();
+
+/* ---------------- ASPECT TAB ---------------- */
+const ASP_QUIZ=[
+ {en:"Every morning I check the gauge readings.",pair:["sprawdzać","sprawdzić"],a:0,
+  why:"A repeated routine (every morning) is a process that keeps happening — imperfective."},
+ {en:"I checked the valve — it's fine now.",pair:["sprawdzać","sprawdzić"],a:1,
+  why:"One action, finished, with a visible result — perfective."},
+ {en:"She was writing the handover report when the alarm sounded.",pair:["pisać","napisać"],a:0,
+  why:"The writing was in progress in the background when something interrupted it — imperfective."},
+ {en:"She finally wrote the report and sent it off.",pair:["pisać","napisać"],a:1,
+  why:"“Finally” + a completed, sent report — a done deal — perfective."},
+ {en:"I'm reading the procedure right now.",pair:["czytać","przeczytać"],a:0,
+  why:"Happening now = present tense, and perfective verbs have no present — imperfective is the only option."},
+ {en:"Tomorrow I'll read the whole procedure, start to finish.",pair:["czytać","przeczytać"],a:1,
+  why:"Reading the WHOLE thing through to completion, once — perfective (przeczytam = I'll read it through)."},
+ {en:"The operator closes this valve at the end of every shift.",pair:["zamykać","zamknąć"],a:0,
+  why:"Habitual — it happens every shift — imperfective."},
+ {en:"Please close the valve now.",pair:["zamykać","zamknąć"],a:1,
+  why:"A request for one complete action with a result (valve closed) — perfective."},
+ {en:"We were doing maintenance all week.",pair:["robić","zrobić"],a:0,
+  why:"“All week” stresses how long the process lasted — imperfective."},
+ {en:"We did the maintenance yesterday — everything works now.",pair:["robić","zrobić"],a:1,
+  why:"Completed, with a result you can point to — perfective."},
+ {en:"He was talking with the shift supervisor for an hour.",pair:["mówić","powiedzieć"],a:0,
+  why:"“For an hour” = duration of an ongoing process — imperfective."},
+ {en:"He said just one word: “Uwaga!”",pair:["mówić","powiedzieć"],a:1,
+  why:"A single, instant, completed utterance — perfective."},
+ {en:"I used to drink coffee on every night shift.",pair:["pić","wypić"],a:0,
+  why:"A past habit — imperfective."},
+ {en:"He drank the whole bottle of water.",pair:["pić","wypić"],a:1,
+  why:"“The whole bottle” — completion is the point — perfective (wypić = drink up)."},
+ {en:"Call me when you finish the report.",pair:["kończyć","skończyć"],a:1,
+  why:"You'll call at the moment it is DONE — one completed future event — perfective."},
+ {en:"We start up the pumps every Monday for testing.",pair:["uruchamiać","uruchomić"],a:0,
+  why:"A routine, repeated action — imperfective."},
+ {en:"We started up the reactor yesterday at 14:00.",pair:["uruchamiać","uruchomić"],a:1,
+  why:"One successful, completed start-up at a specific moment — perfective."},
+];
+let aspBuilt=false;
+const asp={order:[],i:0,score:0};
+function renderAspect(){
+  if(!aspBuilt){
+    aspBuilt=true;
+    document.querySelectorAll("#view-aspect .say").forEach(el=>{
+      el.onclick=()=>speak(el.dataset.pl||el.textContent);
+    });
+    const st=document.getElementById("aspStart"); if(st) st.onclick=aspStart;
+    document.getElementById("mgNew").onclick=mgNew;
+  }
+  if(!document.querySelector("#mgGrid .match-btn")) mgNew();
+}
+function aspStart(){ asp.order=shuffle(ASP_QUIZ); asp.i=0; asp.score=0; aspRender(); }
+function aspRender(){
+  const box=document.getElementById("aspQuizBox");
+  delete box.dataset.answered;
+  if(asp.i>=asp.order.length){
+    const pct=asp.score/asp.order.length;
+    box.innerHTML=`<div class="q-prompt">${pct>=0.8?"🎉 Świetnie! (Excellent!)":"Dobra próba! (Good try!)"}</div>
+      <p class="lead">You got <strong>${asp.score} / ${asp.order.length}</strong>.
+      ${pct>=0.8?"You've got the process-vs-result instinct.":"Re-read the signal words above and run it again — it clicks fast."}</p>
+      <div class="row-actions"><button class="btn" id="aspAgain">Run it again</button></div>`;
+    document.getElementById("aspAgain").onclick=aspStart; return;
+  }
+  const q=asp.order[asp.i];
+  box.innerHTML=`
+    <div class="q-meta">Question ${asp.i+1} of ${asp.order.length} · Score ${asp.score}</div>
+    <div class="q-prompt" style="font-size:1.12rem">“${q.en}”</div>
+    <div class="q-meta">Process or completed result — which verb fits?</div>
+    <div id="aspOpts"></div><div id="aspWhy"></div>`;
+  const opts=document.getElementById("aspOpts");
+  [0,1].forEach(ix=>{
+    const b=document.createElement("button"); b.className="opt";
+    b.innerHTML=`<span class="asp-tagline ${ix?"prf":"imp"}">${ix?"perfective":"imperfective"}</span>${q.pair[ix]}`;
+    b.onclick=()=>{
+      if(box.dataset.answered) return; box.dataset.answered="1";
+      const ok=ix===q.a;
+      if(ok){ b.classList.add("correct"); asp.score++; }
+      else{ b.classList.add("wrong"); opts.children[q.a].classList.add("correct"); }
+      speak(q.pair[q.a]);
+      document.getElementById("aspWhy").innerHTML=
+        `<div class="asp-why">${ok?"✓":"✗"} <strong>${q.pair[q.a]}</strong> — ${q.why}
+         <div class="row-actions" style="margin:12px 0 0"><button class="btn" id="aspNext">Next →</button></div></div>`;
+      document.getElementById("aspNext").onclick=()=>{ asp.i++; aspRender(); };
+    };
+    opts.appendChild(b);
+  });
+}
+/* match-the-pair game (uses VERB_BANK from verbs.js) */
+const mg={sel:null,left:0,total:0,tries:0};
+function mgNew(){
+  const grid=document.getElementById("mgGrid"); grid.innerHTML="";
+  const bank=(typeof VERB_BANK!=="undefined"?VERB_BANK:[]).filter(v=>v.prf);
+  if(bank.length<4){ grid.innerHTML='<div class="wl-empty">Verb bank (verbs.js) not loaded.</div>'; return; }
+  const pick=shuffle(bank).slice(0,6);
+  mg.sel=null; mg.total=pick.length; mg.left=pick.length; mg.tries=0;
+  [["Imperfective 🎬","imp"],["Perfective 📸","prf"]].forEach(([t])=>{
+    const h=document.createElement("div"); h.className="q-meta"; h.style.margin="0"; h.textContent=t;
+    grid.appendChild(h);
+  });
+  const col=items=>{
+    const d=document.createElement("div"); d.style.cssText="display:flex;flex-direction:column;gap:10px";
+    items.forEach(it=>{
+      const b=document.createElement("button"); b.className="match-btn";
+      b.textContent=it.t; b.dataset.k=it.k; b.dataset.side=it.side; b.title=it.en||"";
+      b.onclick=()=>mgClick(b); d.appendChild(b);
+    });
+    return d;
+  };
+  grid.appendChild(col(shuffle(pick.map(v=>({t:v.imp,k:v.imp,side:"imp",en:v.en})))));
+  grid.appendChild(col(shuffle(pick.map(v=>({t:v.prf,k:v.imp,side:"prf",en:v.en})))));
+  mgStat();
+}
+function mgClick(b){
+  if(b.classList.contains("done")) return;
+  if(!mg.sel){ mg.sel=b; b.classList.add("sel"); return; }
+  if(mg.sel===b){ b.classList.remove("sel"); mg.sel=null; return; }
+  if(mg.sel.dataset.side===b.dataset.side){ mg.sel.classList.remove("sel"); mg.sel=b; b.classList.add("sel"); return; }
+  mg.tries++;
+  const a=mg.sel; a.classList.remove("sel"); mg.sel=null;
+  if(a.dataset.k===b.dataset.k){
+    a.classList.add("done"); b.classList.add("done"); mg.left--;
+    const imp=a.dataset.side==="imp"?a:b, prf=a.dataset.side==="imp"?b:a;
+    speak(imp.textContent+", "+prf.textContent);
+  } else {
+    a.classList.add("bad"); b.classList.add("bad");
+    setTimeout(()=>{ a.classList.remove("bad"); b.classList.remove("bad"); },450);
+  }
+  mgStat();
+}
+function mgStat(){
+  document.getElementById("mgStat").innerHTML = mg.left
+    ? `Matched <b>${mg.total-mg.left}</b> of <b>${mg.total}</b> · <b>${mg.tries}</b> attempts`
+    : `🎉 All ${mg.total} matched in ${mg.tries} attempts — <b>dobra robota!</b>`;
+}
 
 /* ---------------- VERBS ---------------- */
 /* simple present conjugations: [personLabel, polishForm] */
