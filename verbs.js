@@ -192,4 +192,8 @@ const VERB_BANK = [
   { en:"to know (people / places)", emoji:"🧠🤝",
     imp:"znać",      present:["znam","znasz","zna","znamy","znacie","znają"],
     prf:null,        future:null },
+
+  { en:"to vist", emoji:"🏝️",
+    imp:"odwiedzać",   present:["odwiedzam","odwiedzasz","odwiedza","odwiedzamy","odwiedzacie","odwiedzają"],
+    prf:"odwiedziċ",   future:["odwiedzę","odwiedzisz","odwiedzi","odwiedzimy","odwiedzicie","odwiedzą"] },
 ];
