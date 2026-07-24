@@ -18,8 +18,12 @@
               [ja, ty, on/ona/ono, my, wy, oni/one]
      prf:     the PERFECTIVE partner (single completed action),
               or null if the verb has no everyday perfective
-     future:  the perfective's future forms (same person order),
-              or null when prf is null
+     future:  the perfective's future forms (same person order).
+              A verb with NO perfective (prf:null) can still fill this
+              in with its OWN future forms — być does this (będę,
+              będziesz…) and they appear as a second column on its
+              conjugation card. Leave null for prf-less verbs whose
+              future is just będę + infinitive (będę mieć, będę chcieć)
      tags:    OPTIONAL extra tags, e.g. tags:["work"]
 
    Remember: perfective verbs have no present tense — their
@@ -35,7 +39,7 @@ const VERB_BANK = [
 
   { en:"to be", emoji:"🧍✨",
     imp:"być",       present:["jestem","jesteś","jest","jesteśmy","jesteście","są"],
-    prf:null,        future:null },
+    prf:null,        future:["będę","będziesz","będzie","będziemy","będziecie","będą"] },
 
   { en:"to want", emoji:"🙏",
     imp:"chcieć",    present:["chcę","chcesz","chce","chcemy","chcecie","chcą"],

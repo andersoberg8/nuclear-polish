@@ -684,7 +684,9 @@
       <thead><tr>
         <th class="sortable" id="wlThPl">Polish <span class="arrow"></span></th>
         <th class="sortable" id="wlThEn">English <span class="arrow"></span></th>
-        <th>Lesson</th><th>Accuracy</th><th>Status</th>
+        <th class="sortable" id="wlThLesson">Lesson <span class="arrow"></span></th>
+        <th class="sortable" id="wlThAcc">Accuracy <span class="arrow"></span></th>
+        <th class="sortable" id="wlThSt">Status <span class="arrow"></span></th>
       </tr></thead>
       <tbody id="wlBody"></tbody>
     </table>
@@ -963,6 +965,8 @@
       app code never needs to change for either file.</p>
     <div class="row-actions">
       <button class="btn ghost small" id="exportProg">Export my progress</button>
+      <button class="btn ghost small" id="importProg">Import progress</button>
+      <input type="file" id="importFile" accept=".json,application/json" class="hidden">
       <button class="btn ghost small" id="resetAll">Reset all my progress</button>
     </div>
   </section>
@@ -1555,7 +1559,11 @@ function verbConjHTML(v){
         ${forms.map((f,k)=>`<span class="fc-form"><em>${FC_PERSONS[k]}</em><span class="ff">${say(f)}<u>${plPronounce(f)}</u></span></span>`).join("")}
       </div>`
     : "";
-  return col(v.imp,"imperfective · present",v.present)+col(v.prf,"perfective · future",v.future);
+  // No perfective partner? A verb may still carry its own future forms
+  // (być → będę, będziesz…) — show them under the imperfective infinitive.
+  const futCol = v.prf ? col(v.prf,"perfective · future",v.future)
+                       : col(v.future ? v.imp : null,"future",v.future);
+  return col(v.imp,"imperfective · present",v.present)+futCol;
 }
 function showCard(){
   if(session.timed && Date.now()>=session.endTime) return finishSession();
@@ -1736,22 +1744,28 @@ function renderWords(){
     b.classList.toggle("on", b.dataset.sort===wordFilter.sort);
     b.onclick=()=>{ wordFilter.sort=b.dataset.sort; renderWords(); };
   });
-  // clickable column headers (Polish / English alphabetical)
-  const thPl=document.getElementById("wlThPl"), thEn=document.getElementById("wlThEn");
-  thPl.querySelector(".arrow").textContent = wordFilter.sort==="pl" ? (wordFilter.dir>0?"▲":"▼") : "";
-  thEn.querySelector(".arrow").textContent = wordFilter.sort==="en" ? (wordFilter.dir>0?"▲":"▼") : "";
-  thPl.onclick=()=>{ wordFilter.dir = wordFilter.sort==="pl" ? -wordFilter.dir : 1; wordFilter.sort="pl"; renderWords(); };
-  thEn.onclick=()=>{ wordFilter.dir = wordFilter.sort==="en" ? -wordFilter.dir : 1; wordFilter.sort="en"; renderWords(); };
+  // clickable column headers — every column sorts; clicking again flips direction
+  [["wlThPl","pl"],["wlThEn","en"],["wlThLesson","lesson"],["wlThAcc","acc"],["wlThSt","status"]]
+    .forEach(([id,key])=>{
+      const th=document.getElementById(id);
+      th.querySelector(".arrow").textContent = wordFilter.sort===key ? (wordFilter.dir>0?"▲":"▼") : "";
+      th.onclick=()=>{ wordFilter.dir = wordFilter.sort===key ? -wordFilter.dir : 1; wordFilter.sort=key; renderWords(); };
+    });
   // filter + search
   let view=rows.filter(r=> wordFilter.status==="all"||r.st===wordFilter.status);
   // tag chips: keep rows carrying ANY selected tag (union)
   if(wordFilter.tags.length) view=view.filter(r=>r.tags.some(t=>wordFilter.tags.includes(t)));
   const q=wordFilter.q.trim().toLowerCase();
   if(q) view=view.filter(r=>r.pl.toLowerCase().includes(q)||r.en.toLowerCase().includes(q)||r.tags.some(t=>t.includes(q)));
-  if(wordFilter.sort==="file") view.sort((a,b)=>a.idx-b.idx);   // source order: lessons, then words.js order
+  if(wordFilter.sort==="file") view.sort((a,b)=>a.idx-b.idx);   // source order: words.js order, then verbs
   else if(wordFilter.sort==="needs") view.sort((a,b)=>STATUS_ORDER[a.st]-STATUS_ORDER[b.st]);
   else if(wordFilter.sort==="pl") view.sort((a,b)=>a.pl.localeCompare(b.pl,"pl")*wordFilter.dir);
   else if(wordFilter.sort==="en") view.sort((a,b)=>a.en.localeCompare(b.en,"en")*wordFilter.dir);
+  else if(wordFilter.sort==="lesson") view.sort((a,b)=>a.lesson.localeCompare(b.lesson)*wordFilter.dir || a.idx-b.idx);
+  else if(wordFilter.sort==="acc")
+    // unpracticed words (no accuracy yet) always sink to the bottom
+    view.sort((a,b)=>((a.acc===null)-(b.acc===null)) || (a.acc-b.acc)*wordFilter.dir || a.idx-b.idx);
+  else if(wordFilter.sort==="status") view.sort((a,b)=>(STATUS_ORDER[a.st]-STATUS_ORDER[b.st])*wordFilter.dir || a.idx-b.idx);
   // table
   const body=document.getElementById("wlBody"); body.innerHTML="";
   if(!view.length){ body.innerHTML=`<tr><td colspan="5" class="wl-empty">No words match.</td></tr>`; return; }
@@ -2773,6 +2787,25 @@ document.getElementById("exportProg").onclick=()=>{
   const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
   a.download=(state.name||"my")+"-polish-progress.json"; a.click();
+};
+document.getElementById("importProg").onclick=()=>document.getElementById("importFile").click();
+document.getElementById("importFile").onchange=(e)=>{
+  const file=e.target.files[0]; e.target.value="";
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(!data || (typeof data!=="object")) throw new Error("not a progress file");
+      const before=Object.keys(state.srs).length;
+      mergeCloudIntoState(data);        // same safe merge as cloud sync — more-reviewed version of each card wins
+      save();                           // persists locally and, if signed in, pushes to the cloud
+      refreshGreet(); rerenderVisible();
+      const after=Object.keys(state.srs).length;
+      alert(`Progress imported — ${after} cards now have review history (was ${before}).`);
+    }catch(err){ alert("Couldn't read that file: "+err.message); }
+  };
+  reader.readAsText(file);
 };
 document.getElementById("resetAll").onclick=()=>{
   if(confirm("Reset ALL your progress on this device?")){ state=fresh(); save(); refreshGreet(); renderLessons(); show("lessons");
