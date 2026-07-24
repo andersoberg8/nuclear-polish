@@ -660,7 +660,7 @@
     <h2 class="title">Team progress</h2>
     <p class="lead">Everyone learning Polish on the project, ranked by words mastered.</p>
     <table class="lb-table">
-      <thead><tr><th>#</th><th>Engineer</th><th>Words learned</th><th>Quizzes passed</th><th>Progress</th></tr></thead>
+      <thead><tr><th>#</th><th>Engineer</th><th>Words mastered</th><th>Quizzes passed</th><th>Progress</th></tr></thead>
       <tbody id="lbBody"></tbody>
     </table>
     <div class="note" id="lbNote"></div>
@@ -2725,12 +2725,12 @@ document.getElementById("signOutBtn").onclick=()=>{ if(window.cloudSignOut) wind
 
 /* ---- the table ---- */
 function lbRow(rank,r,isMe,tot){
-  const pct=Math.round((Number(r.learned)||0)/tot*100);
+  const pct=Math.round((Number(r.mastered)||0)/tot*100);
   const tr=document.createElement("tr"); if(isMe) tr.className="me";
   const ava = r.photo ? `<img class="lb-ava" src="${escapeHtml(r.photo)}" referrerpolicy="no-referrer" alt="">` : `<span class="lb-ava lb-ava-blank"></span>`;
   tr.innerHTML=`<td class="rank">${rank}</td>
     <td><span class="lb-eng">${ava}<span>${escapeHtml(r.name||"Anonymous")}${isMe?' <span class="tag">(you)</span>':''}</span></span></td>
-    <td>${Number(r.learned)||0}</td><td>${Number(r.quizzes)||0}</td>
+    <td>${Number(r.mastered)||0}</td><td>${Number(r.quizzes)||0}</td>
     <td style="min-width:140px"><div class="bar"><i style="width:${pct}%"></i></div></td>`;
   return tr;
 }
@@ -2743,12 +2743,12 @@ async function renderLeaderboard(){
       "To make it a shared, live leaderboard with Google sign-in, follow <code>How to publish and share.md</code> and paste your Firebase "+
       "config into the module at the bottom of this file.";
     body.innerHTML="";
-    body.appendChild(lbRow(1, {name:state.name||"You", learned:totalLearned(), quizzes:quizzesPassed()}, true, tot));
+    body.appendChild(lbRow(1, {name:state.name||"You", mastered:teamStats().mastered, quizzes:quizzesPassed()}, true, tot));
     return;
   }
   if(note){
     note.innerHTML = cloudUser
-      ? "<strong>Shared team leaderboard.</strong> Live across everyone signed in, ranked by words learned. Refresh the page to pull the latest scores."
+      ? "<strong>Shared team leaderboard.</strong> Live across everyone signed in, ranked by flashcard words mastered (7+ day review interval). Refresh the page to pull the latest scores."
       : "<strong>Sign in to join.</strong> Click “Sign in with Google” (top-right). Your progress then saves to your account, follows you across devices, and appears here.";
   }
   body.innerHTML=`<tr><td colspan="5" class="wl-empty">Loading team…</td></tr>`;
@@ -2875,7 +2875,7 @@ if (configured) {
   };
 
   window.cloudFetchLeaderboard = async () => {
-    const q = query(collection(db, "users"), orderBy("stat_learned", "desc"), limit(100));
+    const q = query(collection(db, "users"), orderBy("stat_mastered", "desc"), limit(100));
     const snap = await getDocs(q);
     const out = [];
     snap.forEach(d => {
