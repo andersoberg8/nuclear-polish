@@ -1672,10 +1672,11 @@ function showCard(){
   const front = dir==="pl" ? {side:"polski",term:pl,pr:pr} : {side:"angielski",term:en,pr:""};
   const back  = dir==="pl" ? {side:"angielski",term:en,pr:""} : {side:"polski",term:pl,pr:pr};
   if(card.ctype){
+    // question side is ENGLISH ONLY: type · person · meaning — no Polish
     const lbl=CONJ_LABEL[card.ctype]||card.ctype;
-    const inf=conjInfinitive(card.verb,card.ctype);
-    front.side=lbl; front.term=inf+" · "+FC_PERSONS[card.pix];
-    front.pr=FC_PERSON_EN[card.pix]+" — "+card.verb.en.replace(/^to /,"");
+    front.side=lbl;
+    front.term=FC_PERSON_EN[card.pix]+" — "+card.verb.en.replace(/^to /,"");
+    front.pr="";
     back.side=lbl; back.term=card.cform;
     back.pr=card.cform.split("/").map(plPronounce).join(" / ");
   }
