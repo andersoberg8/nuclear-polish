@@ -36,8 +36,10 @@
 
    Flashcards (handled by index.html):
      • Each verb still gets its word-only aspect-pair card.
-     • Each conj row becomes its OWN flashcard: front shows the type +
-       the verb pair, you recite all six forms, flip to check the table.
+     • Each individual FORM becomes its own flashcard: the front shows
+       the type, infinitive and person ("Past · Imperfective — robić ·
+       my"), the answer is that single form (robiliśmy/robiłyśmy).
+       "—" forms are skipped automatically.
      • On the Flashcards page, pick which conjugation types to drill.
 
    Sorted A→Z by the imperfective verb.

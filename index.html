@@ -528,7 +528,7 @@
         </div>
       </div>
       <div class="fc-field" id="fcCtypeField">
-        <label>Conjugation types <span class="fc-tag-hint">— each type is its own card: recite all six forms, flip to check</span></label>
+        <label>Conjugation types <span class="fc-tag-hint">— one card per form, e.g. "robić · my" in the past → robiliśmy</span></label>
         <div class="wl-filters" id="fcCtypes"></div>
       </div>
       <div class="fc-field">
@@ -966,10 +966,10 @@
       perfective pair, and a <code>conj:{...}</code> object holding its conjugation tables — present, past and
       future in both aspects, imperative, and conditional. <strong>Every row is optional</strong>: leave any
       out and nothing breaks. The file header shows the exact format. Each verb becomes a word-only aspect-pair
-      flashcard plus <em>one flashcard per conjugation table</em>, each tracked separately: the front names the
-      type ("Past · Imperfective — robić / zrobić"), you recite all six forms, and flip to check. Choose word
-      or conjugation cards with the <em>Verb cards</em> toggle in Flashcards, and narrow to specific types
-      (e.g. just past tenses) with the <em>Conjugation types</em> chips. Every verb is tagged <code>verb</code>
+      flashcard plus <em>one flashcard per conjugated form</em>, each tracked separately: the front names the
+      type, infinitive and person ("Past · Imperfective — robić · my"), and you flip to check that single form
+      (robiliśmy/robiłyśmy). Choose word or conjugation cards with the <em>Verb cards</em> toggle in Flashcards,
+      and narrow to specific types (e.g. just past tenses) with the <em>Conjugation types</em> chips. Every verb is tagged <code>verb</code>
       automatically (conjugation cards also get <code>conjugation</code>); add extra tags like
       <code>tags:["work"]</code> if you want, and an <code>emoji:"🔨"</code> field for the answer side of the
       card. The app code never needs to change for either file.</p>
@@ -1382,16 +1382,20 @@ function allCards(){
     const vnote = extra.note || v.note || "";
     out.push({key:"verbword:"+v.imp, lid:"verbs", i, w:[pair,pron,v.en],
       tags:["verb"].concat(extra.tags), gender:extra.gender, emoji:vemoji, note:vnote, verb:v, vkind:"word"});
-    // one conjugation card PER TABLE the verb actually has — rows may be
-    // freely omitted in verbs.js; each present row becomes its own card,
-    // tracked separately in spaced repetition.
+    // one conjugation card PER FORM: each person of each table the verb
+    // actually has becomes its own flashcard ("my + robić, past" →
+    // "robiliśmy/robiłyśmy"), tracked separately in spaced repetition.
+    // Rows may be freely omitted in verbs.js; "—" forms are skipped.
     const cmap = verbConj(v);
     const order = CONJ_TYPES.map(t=>t[0]).concat(Object.keys(cmap).filter(k=>!CONJ_LABEL[k]));
     order.forEach(k=>{
       if(!Array.isArray(cmap[k]) || !cmap[k].length) return;
-      out.push({key:"verbconj:"+v.imp+":"+k, lid:"verbs", i, w:[pair,pron,v.en],
-        tags:["verb","conjugation"].concat(extra.tags), gender:extra.gender, emoji:vemoji, note:vnote,
-        verb:v, vkind:"conj", ctype:k, cforms:cmap[k]});
+      cmap[k].forEach((f,pix)=>{
+        if(!f || f==="—") return;
+        out.push({key:"verbconj:"+v.imp+":"+k+":"+pix, lid:"verbs", i, w:[pair,pron,v.en],
+          tags:["verb","conjugation"].concat(extra.tags), gender:extra.gender, emoji:vemoji, note:vnote,
+          verb:v, vkind:"conj", ctype:k, cform:f, pix});
+      });
     });
   });
   return out;
@@ -1604,6 +1608,7 @@ function updateCounter(){
   document.getElementById("fcCounter").textContent=txt;
 }
 const FC_PERSONS=["ja","ty","on/ona","my","wy","oni"];
+const FC_PERSON_EN=["I","you","he/she","we","you (plural)","they"];
 // The conjugation types a verb may carry in verbs.js (conj:{...}).
 // Every row is optional; unknown row names still work (shown by their key).
 const CONJ_TYPES=[
@@ -1657,10 +1662,10 @@ function showCard(){
   if(session.i>=session.queue.length) return finishSession();
   const card=session.queue[session.i];
   const [pl,pr,en]=card.w;
-  // per-type conjugation cards ignore direction: the question is always the
-  // type + the verb pair ("Past · Imperfective — robić / zrobić"); you recite
-  // all six forms, then flip to check the table on the answer side.
-  const dir = card.ctype ? "pl" : curDir(); session.curDir=dir;
+  // per-form conjugation cards ignore direction: the question is the type +
+  // infinitive + person ("Past · Imperfective — robić · my"), the answer is
+  // that single form. dir "en" so the speaker sits on the answer face.
+  const dir = card.ctype ? "en" : curDir(); session.curDir=dir;
   const cardEl=document.getElementById("fcCard");
   cardEl.classList.remove("flipped");
   document.getElementById("fcGrade").classList.remove("hidden");
@@ -1668,7 +1673,11 @@ function showCard(){
   const back  = dir==="pl" ? {side:"angielski",term:en,pr:""} : {side:"polski",term:pl,pr:pr};
   if(card.ctype){
     const lbl=CONJ_LABEL[card.ctype]||card.ctype;
-    front.side=lbl; back.side=lbl;
+    const inf=conjInfinitive(card.verb,card.ctype);
+    front.side=lbl; front.term=inf+" · "+FC_PERSONS[card.pix];
+    front.pr=FC_PERSON_EN[card.pix]+" — "+card.verb.en.replace(/^to /,"");
+    back.side=lbl; back.term=card.cform;
+    back.pr=card.cform.split("/").map(plPronounce).join(" / ");
   }
   // gender color + label on whichever face shows the Polish word
   const frontFace=cardEl.querySelector(".front"), backFace=cardEl.querySelector(".back");
@@ -1698,11 +1707,10 @@ function showCard(){
   cardEl.classList.toggle("verb", !!v);
   const fConj=document.getElementById("fcFrontConj"), bConj=document.getElementById("fcBackConj");
   fConj.innerHTML=""; bConj.innerHTML="";
-  if(v){
-    // per-type cards: the single table is the ANSWER, so it lives on the back;
+  if(v && !card.ctype){
     // legacy all-in-one conjugation cards keep the table on the Polish face
-    const box = card.ctype ? bConj : (dir==="pl" ? fConj : bConj);
-    box.innerHTML = card.ctype ? verbConjRowHTML(v, card.ctype, card.cforms) : verbConjHTML(v);
+    const box = dir==="pl" ? fConj : bConj;
+    box.innerHTML = verbConjHTML(v);
     box.querySelectorAll(".fc-say").forEach(el=>{
       el.onclick=(e)=>{ e.stopPropagation(); speak(el.dataset.say); };
     });
@@ -1711,7 +1719,8 @@ function showCard(){
   const frontSpk=document.getElementById("fcFrontSpeak"), backSpk=document.getElementById("fcBackSpeak");
   frontSpk.classList.toggle("hidden", dir!=="pl");
   backSpk.classList.toggle("hidden", dir!=="en");
-  const speakText = vb ? vb.imp+(vb.prf ? ", "+vb.prf : "") : pl;
+  const speakText = card.ctype ? card.cform.replace(/\//g,", ")
+                   : vb ? vb.imp+(vb.prf ? ", "+vb.prf : "") : pl;
   const speakPolish=(e)=>{ e.stopPropagation(); speak(speakText); };
   frontSpk.onclick=speakPolish; backSpk.onclick=speakPolish;
   updateCounter();
