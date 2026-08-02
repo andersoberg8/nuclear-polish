@@ -413,6 +413,8 @@
   /* flashcard meaning emoji (answer side) */
   .fc-emoji{font-size:2rem;line-height:1.25;letter-spacing:.1em;margin-top:2px}
   .fc-emoji:empty{display:none}
+  .fc-note{font-size:.78rem;color:#8a8f98;font-style:italic;margin-top:4px;max-width:90%;line-height:1.35}
+  .fc-note:empty{display:none}
   /* noun gender colors — applied to whichever face shows the Polish word.
      Tag a word "m", "f" or "n" in words.js and the Polish side turns
      baby blue (masculine), pink (feminine) or pale green (neuter). */
@@ -521,9 +523,13 @@
         <label>Verb cards <span class="fc-tag-hint">— word-only and conjugation cards are tracked separately</span></label>
         <div class="seg" id="fcVerbCards">
           <button data-verbcards="word" class="on">Word only</button>
-          <button data-verbcards="conj">With conjugations</button>
+          <button data-verbcards="conj">Conjugations</button>
           <button data-verbcards="both">Both</button>
         </div>
+      </div>
+      <div class="fc-field" id="fcCtypeField">
+        <label>Conjugation types <span class="fc-tag-hint">— each type is its own card: recite all six forms, flip to check</span></label>
+        <div class="wl-filters" id="fcCtypes"></div>
       </div>
       <div class="fc-field">
         <label>Show first</label>
@@ -580,6 +586,7 @@
             <div class="term" id="fcBackTerm"></div>
             <div class="pr" id="fcBackPr"></div>
             <div class="fc-emoji" id="fcBackEmoji"></div>
+            <div class="fc-note" id="fcBackNote"></div>
             <div class="fc-tags" id="fcBackTags"></div>
             <div class="fc-conj" id="fcBackConj"></div>
             <button class="fc-speak hidden" id="fcBackSpeak" title="Hear it in Polish">🔊</button>
@@ -955,14 +962,17 @@
       becomes a filter chip in the Word list and Flashcards. A full entry looks like
       <code>["deszcz","rain","m","🌧️","weather"]</code>. Leave non-nouns without a gender tag. Watch the commas
       and quotes: one missing comma stops the whole file (and the app's tabs) from loading.</p>
-    <p>Verbs live in <code>verbs.js</code>, one block per verb: the English meaning, the imperfective with its
-      six present-tense forms, and the perfective with its six future forms (or <code>null</code> if there's no
-      everyday perfective). The file header shows the exact format. Every verb becomes <em>two</em> flashcards,
-      tracked separately: a word-only card and a conjugation card — choose which to study with the
-      <em>Verb cards</em> toggle in Flashcards. Every verb is tagged <code>verb</code> automatically (conjugation
-      cards also get <code>conjugation</code>); add extra tags like <code>tags:["work"]</code> if you want, and an
-      <code>emoji:"🔨"</code> field for the answer side of the card. The
-      app code never needs to change for either file.</p>
+    <p>Verbs live in <code>verbs.js</code>, one block per verb: the English meaning, the imperfective /
+      perfective pair, and a <code>conj:{...}</code> object holding its conjugation tables — present, past and
+      future in both aspects, imperative, and conditional. <strong>Every row is optional</strong>: leave any
+      out and nothing breaks. The file header shows the exact format. Each verb becomes a word-only aspect-pair
+      flashcard plus <em>one flashcard per conjugation table</em>, each tracked separately: the front names the
+      type ("Past · Imperfective — robić / zrobić"), you recite all six forms, and flip to check. Choose word
+      or conjugation cards with the <em>Verb cards</em> toggle in Flashcards, and narrow to specific types
+      (e.g. just past tenses) with the <em>Conjugation types</em> chips. Every verb is tagged <code>verb</code>
+      automatically (conjugation cards also get <code>conjugation</code>); add extra tags like
+      <code>tags:["work"]</code> if you want, and an <code>emoji:"🔨"</code> field for the answer side of the
+      card. The app code never needs to change for either file.</p>
     <div class="row-actions">
       <button class="btn ghost small" id="exportProg">Export my progress</button>
       <button class="btn ghost small" id="importProg">Import progress</button>
@@ -1277,7 +1287,7 @@ function finishQuiz(){
 
 /* ---------------- FLASHCARDS + SPACED REPETITION ---------------- */
 const DAY = 86400000;
-const fc = { dir:"en", mode:"due", deck:"all", tags:[], verbcards:"word", limitType:"none", cardCount:20, timeMin:5 };
+const fc = { dir:"en", mode:"due", deck:"all", tags:[], verbcards:"word", ctypes:[], limitType:"none", cardCount:20, timeMin:5 };
 const CARD_OPTS=[10,20,30,50,100], TIME_OPTS=[3,5,10,15];
 let session = null;
 
@@ -1329,19 +1339,22 @@ function plPronounce(word){
 // Special word extras in words.js — recognized by content, not position:
 //   "m"/"f"/"n"  -> noun gender (colors the Polish face of flashcards)
 //   an emoji     -> meaning emoji (shown on the answer side of the card)
+//   "note:..."   -> a study note (small muted text on the answer side)
 //   anything else-> a topic tag (filter chips)
 // Gender and emoji are kept OUT of the topic-tag chips.
 const GENDER_TAGS={m:"masculine",f:"feminine",n:"neuter"};
 const GENDER_PL={m:"męski",f:"żeński",n:"nijaki"};   // shown on the Polish face
 const EMOJI_RE=/[\u{1F000}-\u{1FAFF}\u{2100}-\u{2BFF}\u{FE0F}\u{20E3}]/u;
 function splitMeta(raw){
-  let gender=null, emoji="", tags=[];
-  raw.forEach(t=>{
-    if(GENDER_TAGS[t]) gender=gender||t;
+  let gender=null, emoji="", tags=[], note="";
+  raw.forEach(x=>{
+    const t=String(x), lt=t.toLowerCase();
+    if(lt.startsWith("note:")) note=note||t.slice(5).trim();
+    else if(GENDER_TAGS[lt]) gender=gender||lt;
     else if(EMOJI_RE.test(t)) emoji=emoji||t;
-    else tags.push(t);
+    else tags.push(lt);
   });
-  return {gender,emoji,tags};
+  return {gender,emoji,tags,note};
 }
 // every card has a stable key. Flashcards draw from exactly TWO sources:
 // words.js (COMMON_WORDS) and verbs.js (VERB_BANK). Lesson vocabulary in
@@ -1354,8 +1367,8 @@ function allCards(){
   // The pronunciation guide is generated automatically from the spelling.
   // Anything after the English gloss in words.js (w[2], w[3], …) is an optional tag.
   COMMON_WORDS.forEach((w,i)=>{
-    const gt=splitMeta(w.slice(2).map(t=>String(t).toLowerCase()));
-    out.push({key:"common:"+String(w[0]).toLowerCase(), lid:"common", i, w:[w[0],plPronounce(w[0]),w[1]], tags:gt.tags, gender:gt.gender, emoji:gt.emoji});
+    const gt=splitMeta(w.slice(2));
+    out.push({key:"common:"+String(w[0]).toLowerCase(), lid:"common", i, w:[w[0],plPronounce(w[0]),w[1]], tags:gt.tags, gender:gt.gender, emoji:gt.emoji, note:gt.note});
   });
   // Verbs from verbs.js: each verb becomes TWO separately-tracked cards, both
   // keyed by the imperfective — a word-only card (just the aspect pair) and a
@@ -1364,12 +1377,22 @@ function allCards(){
   (typeof VERB_BANK!=="undefined" ? VERB_BANK : []).forEach((v,i)=>{
     const pair = v.prf ? v.imp+" / "+v.prf : v.imp;
     const pron = v.prf ? plPronounce(v.imp)+" · "+plPronounce(v.prf) : plPronounce(v.imp);
-    const extra = splitMeta((v.tags||[]).map(t=>String(t).toLowerCase()));
+    const extra = splitMeta(v.tags||[]);
     const vemoji = extra.emoji || v.emoji || "";
+    const vnote = extra.note || v.note || "";
     out.push({key:"verbword:"+v.imp, lid:"verbs", i, w:[pair,pron,v.en],
-      tags:["verb"].concat(extra.tags), gender:extra.gender, emoji:vemoji, verb:v, vkind:"word"});
-    out.push({key:"verbconj:"+v.imp, lid:"verbs", i, w:[pair,pron,v.en],
-      tags:["verb","conjugation"].concat(extra.tags), gender:extra.gender, emoji:vemoji, verb:v, vkind:"conj"});
+      tags:["verb"].concat(extra.tags), gender:extra.gender, emoji:vemoji, note:vnote, verb:v, vkind:"word"});
+    // one conjugation card PER TABLE the verb actually has — rows may be
+    // freely omitted in verbs.js; each present row becomes its own card,
+    // tracked separately in spaced repetition.
+    const cmap = verbConj(v);
+    const order = CONJ_TYPES.map(t=>t[0]).concat(Object.keys(cmap).filter(k=>!CONJ_LABEL[k]));
+    order.forEach(k=>{
+      if(!Array.isArray(cmap[k]) || !cmap[k].length) return;
+      out.push({key:"verbconj:"+v.imp+":"+k, lid:"verbs", i, w:[pair,pron,v.en],
+        tags:["verb","conjugation"].concat(extra.tags), gender:extra.gender, emoji:vemoji, note:vnote,
+        verb:v, vkind:"conj", ctype:k, cforms:cmap[k]});
+    });
   });
   return out;
 }
@@ -1427,6 +1450,10 @@ function renderFcSetup(){
   // the verb-cards toggle only matters when the pool can contain verbs
   const vf=document.getElementById("fcVerbField");
   if(vf) vf.style.display = (fc.deck==="all"||fc.deck==="verbs") ? "" : "none";
+  // conjugation-type chips only matter when conjugation cards are in play
+  renderFcCtypes();
+  const cf=document.getElementById("fcCtypeField");
+  if(cf) cf.style.display = ((fc.deck==="all"||fc.deck==="verbs") && fc.verbcards!=="word") ? "" : "none";
   // session-length type + value
   document.querySelectorAll("#fcLimitType button").forEach(b=>{
     b.classList.toggle("on", b.dataset.limittype===fc.limitType);
@@ -1494,6 +1521,29 @@ function renderFcTags(){
     box.appendChild(c);
   });
 }
+// Chips for picking which conjugation types to drill (union, like tags).
+function renderFcCtypes(){
+  const box=document.getElementById("fcCtypes");
+  if(!box) return;
+  box.innerHTML="";
+  fc.ctypes=(fc.ctypes||[]).filter(k=>CONJ_LABEL[k]);
+  const clear=document.createElement("div");
+  clear.className="wl-chip tag-clear"+(fc.ctypes.length? "":" on");
+  clear.textContent="All types";
+  clear.onclick=()=>{ fc.ctypes=[]; renderFcSetup(); };
+  box.appendChild(clear);
+  CONJ_TYPES.forEach(([k,label])=>{
+    const on=fc.ctypes.includes(k);
+    const c=document.createElement("div");
+    c.className="wl-chip"+(on?" on":"");
+    c.textContent=label;
+    c.onclick=()=>{
+      if(on) fc.ctypes=fc.ctypes.filter(x=>x!==k); else fc.ctypes=fc.ctypes.concat(k);
+      renderFcSetup();
+    };
+    box.appendChild(c);
+  });
+}
 function deckCards(){
   const all=allCards();
   let cards = fc.deck==="all" ? all : all.filter(c=>c.lid===fc.deck);
@@ -1504,6 +1554,10 @@ function deckCards(){
   // Verb cards toggle: word-only cards, conjugation cards, or both
   if(fc.verbcards!=="both"){
     cards = cards.filter(c=>!c.vkind || c.vkind===fc.verbcards);
+  }
+  // Conjugation-type filter: keep chosen types (empty selection = all)
+  if(fc.ctypes && fc.ctypes.length){
+    cards = cards.filter(c=>!c.ctype || fc.ctypes.includes(c.ctype));
   }
   return cards;
 }
@@ -1550,6 +1604,38 @@ function updateCounter(){
   document.getElementById("fcCounter").textContent=txt;
 }
 const FC_PERSONS=["ja","ty","on/ona","my","wy","oni"];
+// The conjugation types a verb may carry in verbs.js (conj:{...}).
+// Every row is optional; unknown row names still work (shown by their key).
+const CONJ_TYPES=[
+  ["present",    "Present · Imperfective"],
+  ["pastImp",    "Past · Imperfective"],
+  ["pastPrf",    "Past · Perfective"],
+  ["futureImp",  "Future · Imperfective"],
+  ["futurePrf",  "Future · Perfective"],
+  ["imperative", "Imperative"],
+  ["conditional","Conditional"],
+];
+const CONJ_LABEL=Object.fromEntries(CONJ_TYPES);
+// Normalized conjugation map — also understands the old verbs.js format
+// (top-level present/future), so nothing breaks mid-upgrade.
+function verbConj(v){
+  if(v.conj) return v.conj;
+  const c={};
+  if(v.present) c.present=v.present;
+  if(v.future) c[v.prf?"futurePrf":"futureImp"]=v.future;
+  return c;
+}
+// Which infinitive heads a table: perfective rows use prf, the rest imp.
+function conjInfinitive(v,k){ return (k==="pastPrf"||k==="futurePrf")&&v.prf ? v.prf : v.imp; }
+// Single-table answer face for a per-type conjugation card.
+function verbConjRowHTML(v,k,forms){
+  const say=(w)=>`<span class="fc-say" data-say="${String(w).replace(/\//g,", ")}">${w}<span class="ico">🔊</span></span>`;
+  const inf=conjInfinitive(v,k);
+  return `<div class="fc-conj-col">
+      <b>${say(inf)}</b><u>${plPronounce(inf)}</u><i>${(CONJ_LABEL[k]||k).toLowerCase()}</i>
+      ${forms.map((f,ix)=>`<span class="fc-form"><em>${FC_PERSONS[ix]}</em><span class="ff">${f==="—"?"—":say(f)}<u>${f==="—"?"":plPronounce(f)}</u></span></span>`).join("")}
+    </div>`;
+}
 function verbConjHTML(v){
   // every Polish form is tappable (🔊) and shows its pronunciation guide below
   const say=(w,cls)=>`<span class="fc-say ${cls||""}" data-say="${w}">${w}<span class="ico">🔊</span></span>`;
@@ -1561,21 +1647,29 @@ function verbConjHTML(v){
     : "";
   // No perfective partner? A verb may still carry its own future forms
   // (być → będę, będziesz…) — show them under the imperfective infinitive.
-  const futCol = v.prf ? col(v.prf,"perfective · future",v.future)
-                       : col(v.future ? v.imp : null,"future",v.future);
-  return col(v.imp,"imperfective · present",v.present)+futCol;
+  const c=verbConj(v);
+  const futCol = v.prf ? col(v.prf,"perfective · future",c.futurePrf)
+                       : col(c.futureImp ? v.imp : null,"future",c.futureImp);
+  return col(v.imp,"imperfective · present",c.present)+futCol;
 }
 function showCard(){
   if(session.timed && Date.now()>=session.endTime) return finishSession();
   if(session.i>=session.queue.length) return finishSession();
   const card=session.queue[session.i];
   const [pl,pr,en]=card.w;
-  const dir=curDir(); session.curDir=dir;
+  // per-type conjugation cards ignore direction: the question is always the
+  // type + the verb pair ("Past · Imperfective — robić / zrobić"); you recite
+  // all six forms, then flip to check the table on the answer side.
+  const dir = card.ctype ? "pl" : curDir(); session.curDir=dir;
   const cardEl=document.getElementById("fcCard");
   cardEl.classList.remove("flipped");
   document.getElementById("fcGrade").classList.remove("hidden");
   const front = dir==="pl" ? {side:"polski",term:pl,pr:pr} : {side:"angielski",term:en,pr:""};
   const back  = dir==="pl" ? {side:"angielski",term:en,pr:""} : {side:"polski",term:pl,pr:pr};
+  if(card.ctype){
+    const lbl=CONJ_LABEL[card.ctype]||card.ctype;
+    front.side=lbl; back.side=lbl;
+  }
   // gender color + label on whichever face shows the Polish word
   const frontFace=cardEl.querySelector(".front"), backFace=cardEl.querySelector(".back");
   ["gm","gf","gn"].forEach(c=>{ frontFace.classList.remove(c); backFace.classList.remove(c); });
@@ -1593,6 +1687,8 @@ function showCard(){
   // meaning emoji — always on the answer (back) face
   const emo=card.emoji||"";
   document.getElementById("fcBackEmoji").textContent=emo;
+  // note — always on the answer (back) face, in small muted text
+  document.getElementById("fcBackNote").textContent=card.note||"";
   // tag chips on whichever face shows English
   const fTags=document.getElementById("fcFrontTags"), bTags=document.getElementById("fcBackTags");
   fTags.innerHTML=""; bTags.innerHTML="";
@@ -1603,8 +1699,10 @@ function showCard(){
   const fConj=document.getElementById("fcFrontConj"), bConj=document.getElementById("fcBackConj");
   fConj.innerHTML=""; bConj.innerHTML="";
   if(v){
-    const box = dir==="pl" ? fConj : bConj;
-    box.innerHTML = verbConjHTML(v);
+    // per-type cards: the single table is the ANSWER, so it lives on the back;
+    // legacy all-in-one conjugation cards keep the table on the Polish face
+    const box = card.ctype ? bConj : (dir==="pl" ? fConj : bConj);
+    box.innerHTML = card.ctype ? verbConjRowHTML(v, card.ctype, card.cforms) : verbConjHTML(v);
     box.querySelectorAll(".fc-say").forEach(el=>{
       el.onclick=(e)=>{ e.stopPropagation(); speak(el.dataset.say); };
     });
@@ -1690,7 +1788,8 @@ function wordStatus(card){
 }
 
 function renderWords(){
-  const rows=allCards().map((c,idx)=>{
+  // one row per word/verb — per-type conjugation cards would repeat each verb
+  const rows=allCards().filter(c=>c.vkind!=="conj").map((c,idx)=>{
     const d=cardData(c.key), total=d.right+d.wrong;
     return {idx, pl:c.w[0],pr:c.w[1],en:c.w[2],
       lesson:lessonLabel(c.lid),
