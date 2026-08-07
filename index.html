@@ -355,6 +355,25 @@
   .btn:active{transform:translateY(0);filter:brightness(.97)}
   .btn.ghost{background:transparent;box-shadow:none}
   .btn.ghost:hover{border-color:var(--accent);color:var(--accent);transform:none;box-shadow:none}
+  /* Start session — the one button that launches a study run, so it reads
+     as the primary action: bigger, warmer, and gently pulsing. */
+  .btn-launch{display:block;width:100%;max-width:420px;margin:4px auto 2px;
+    padding:15px 26px;font-size:1.06rem;font-weight:800;letter-spacing:.02em;
+    border-radius:13px;
+    background:linear-gradient(180deg,#ffc75a,#f0921f);color:#2a1600;
+    box-shadow:0 3px 0 #b96c11,0 8px 22px -8px rgba(240,146,31,.75),
+      inset 0 1px 0 rgba(255,255,255,.4);
+    animation:launchPulse 2.6s ease-in-out infinite}
+  .btn-launch:hover{filter:brightness(1.06);transform:translateY(-2px);
+    box-shadow:0 5px 0 #b96c11,0 14px 30px -10px rgba(240,146,31,.85),
+      inset 0 1px 0 rgba(255,255,255,.4);animation:none}
+  .btn-launch:active{transform:translateY(1px);
+    box-shadow:0 1px 0 #b96c11,0 6px 16px -8px rgba(240,146,31,.7),
+      inset 0 1px 0 rgba(255,255,255,.3)}
+  @keyframes launchPulse{
+    0%,100%{box-shadow:0 3px 0 #b96c11,0 8px 22px -8px rgba(240,146,31,.75),inset 0 1px 0 rgba(255,255,255,.4)}
+    50%{box-shadow:0 3px 0 #b96c11,0 8px 30px -6px rgba(240,146,31,.95),inset 0 1px 0 rgba(255,255,255,.4)}}
+  @media (prefers-reduced-motion:reduce){.btn-launch{animation:none}}
   .seg button{transition:background .15s,color .15s}
   .seg button.on{background:linear-gradient(180deg,#23cfbc,#0f9e90);color:var(--on-accent)}
   button:focus-visible,.opt:focus-visible{outline:none;box-shadow:var(--focus)}
@@ -462,8 +481,8 @@
   <button data-tab="aspect">Aspect</button>
   <button data-tab="numbers">Numbers</button>
   <button data-tab="words">Word list</button>
-  <button data-tab="flashcards">Flashcards</button>
-  <button data-tab="lessons" class="active">Lessons</button>
+  <button data-tab="flashcards" class="active">Flashcards</button>
+  <button data-tab="lessons">Lessons</button>
   <button data-tab="speak">Speaking</button>
   <button data-tab="leaderboard">Team progress</button>
 </nav>
@@ -518,6 +537,10 @@
       </div>
       <div class="fc-field" id="fcTagField">
         <label>Tags <span class="fc-tag-hint">— optional, pick one or more to study just those words</span></label>
+        <div class="seg" id="fcTagMode" style="margin-bottom:10px">
+          <button data-tagmode="all" class="on">All tags</button>
+          <button data-tagmode="pick">Tags</button>
+        </div>
         <div class="wl-filters" id="fcTags"></div>
       </div>
       <div class="fc-field" id="fcVerbField">
@@ -533,11 +556,18 @@
         <div class="wl-filters" id="fcCtypes"></div>
       </div>
       <div class="fc-field" id="fcNounField">
-        <label>Noun cards <span class="fc-tag-hint">— nominative-only and case cards are tracked separately</span></label>
+        <label>Noun cards <span class="fc-tag-hint">— the nominative-singular cards are the same cards in both options, tracked once</span></label>
         <div class="seg" id="fcNounCards">
-          <button data-nouncards="word" class="on">Nominative only</button>
-          <button data-nouncards="case">Cases</button>
-          <button data-nouncards="both">Both</button>
+          <button data-nouncards="word" class="on">Nominative singular only</button>
+          <button data-nouncards="case">All cases</button>
+        </div>
+      </div>
+      <div class="fc-field" id="fcNounNumField">
+        <label>Number <span class="fc-tag-hint">— study singular forms, plural forms, or both</span></label>
+        <div class="seg" id="fcNounNum">
+          <button data-nounnum="both" class="on">Both</button>
+          <button data-nounnum="sg">Singular</button>
+          <button data-nounnum="pl">Plural</button>
         </div>
       </div>
       <div class="fc-field" id="fcCasetypeField">
@@ -547,8 +577,8 @@
       <div class="fc-field">
         <label>Show first</label>
         <div class="seg" id="fcDir">
-          <button data-dir="pl">Polish → English</button>
           <button data-dir="en" class="on">English → Polish</button>
+          <button data-dir="pl">Polish → English</button>
           <button data-dir="mix">Mixed</button>
         </div>
       </div>
@@ -569,7 +599,7 @@
         <div class="seg" id="fcLimitVal"></div>
       </div>
       <div class="row-actions">
-        <button class="btn" id="fcStart">Start session</button>
+        <button class="btn btn-launch" id="fcStart">▶&nbsp; Start session</button>
       </div>
       <div class="fc-field" style="margin-bottom:0">
         <label>What's due today</label>
@@ -1103,10 +1133,14 @@ function load(){
   try{ s = JSON.parse(localStorage.getItem(KEY)) || fresh(); }catch(e){ s = fresh(); }
   s.srs = s.srs || {};            // per-card spaced-repetition data
   // one-time migration: nouns moved from words.js into nouns.js keep their
-  // review history (old key "common:x" -> new key "nounword:x")
+  // review history. Old keys ("common:x", then briefly "nounword:x") both
+  // map onto the noun's Nominative · Singular case card.
   (typeof NOUN_BANK!=="undefined" ? NOUN_BANK : []).forEach(n=>{
-    const o="common:"+n.nom.toLowerCase(), k="nounword:"+n.nom;
-    if(s.srs[o] && !s.srs[k]){ s.srs[k]=s.srs[o]; delete s.srs[o]; }
+    if(!(n.decl&&n.decl.nom)) return;
+    const k="nouncase:"+n.nom+":nom:0";
+    ["common:"+n.nom.toLowerCase(),"nounword:"+n.nom].forEach(o=>{
+      if(s.srs[o]){ if(!s.srs[k]) s.srs[k]=s.srs[o]; delete s.srs[o]; }
+    });
   });
   return s;
 }
@@ -1309,7 +1343,7 @@ function finishQuiz(){
 
 /* ---------------- FLASHCARDS + SPACED REPETITION ---------------- */
 const DAY = 86400000;
-const fc = { dir:"en", mode:"due", deck:"all", tags:[], verbcards:"word", ctypes:[], nouncards:"word", casetypes:[], limitType:"none", cardCount:20, timeMin:5 };
+const fc = { dir:"en", mode:"due", deck:"all", tagmode:"all", tags:[], verbcards:"word", ctypes:[], nouncards:"word", casetypes:[], nounnum:"both", limitType:"none", cardCount:20, timeMin:5 };
 const CARD_OPTS=[10,20,30,50,100], TIME_OPTS=[3,5,10,15];
 let session = null;
 
@@ -1429,8 +1463,8 @@ function allCards(){
     const nemoji = extra.emoji || n.emoji || "";
     const nnote = extra.note || n.note || "";
     const g = n.gender || extra.gender || null;
-    out.push({key:"nounword:"+n.nom, lid:"nouns", i, w:[n.nom,plPronounce(n.nom),n.en],
-      tags:["noun"].concat(extra.tags), gender:g, emoji:nemoji, note:nnote, noun:n, nkind:"word"});
+    // No separate word card: the Nominative · Singular case card IS the
+    // noun's word card, shared by both "Nominative only" and "All cases".
     const d = n.decl||{};
     const order = CASE_TYPES.map(t=>t[0]).concat(Object.keys(d).filter(k=>!CASE_LABEL[k]));
     order.forEach(k=>{
@@ -1494,7 +1528,8 @@ function renderFcSetup(){
     verbs:nOf(c=>c.lid==="verbs"),
     nouns:nOf(c=>c.lid==="nouns"),
     vword:nOf(c=>c.vkind==="word"),   vconj:nOf(c=>c.vkind==="conj"),
-    nword:nOf(c=>c.nkind==="word"),   ncase:nOf(c=>c.nkind==="case"),
+    nword:nOf(c=>c.casek==="nom"&&c.nx===0), ncase:nOf(c=>c.nkind==="case"),
+    nsg:nOf(c=>c.nkind==="case"&&c.nx===0),  npl:nOf(c=>c.nkind==="case"&&c.nx===1),
   };
   const withN=(label,n)=>`${label} <span class="seg-n">${n}</span>`;
   // deck segmented control
@@ -1517,8 +1552,13 @@ function renderFcSetup(){
   });
   document.querySelectorAll("#fcNounCards button").forEach(b=>{
     const k=b.dataset.nouncards;
-    b.innerHTML=withN(k==="word"?"Nominative only":k==="case"?"Cases":"Both",
-      k==="word"?cnt.nword:k==="case"?cnt.ncase:cnt.nword+cnt.ncase);
+    b.innerHTML=withN(k==="word"?"Nominative singular only":"All cases",
+      k==="word"?cnt.nword:cnt.ncase);
+  });
+  document.querySelectorAll("#fcNounNum button").forEach(b=>{
+    const k=b.dataset.nounnum;
+    b.innerHTML=withN(k==="both"?"Both":k==="sg"?"Singular":"Plural",
+      k==="both"?cnt.ncase:k==="sg"?cnt.nsg:cnt.npl);
   });
   // the verb-cards toggle only matters when the pool can contain verbs
   const vf=document.getElementById("fcVerbField");
@@ -1534,6 +1574,9 @@ function renderFcSetup(){
   renderFcCasetypes();
   const caf=document.getElementById("fcCasetypeField");
   if(caf) caf.style.display = ((fc.deck==="all"||fc.deck==="nouns") && fc.nouncards!=="word") ? "" : "none";
+  syncSeg("fcNounNum","nounnum",fc.nounnum);
+  const nnf=document.getElementById("fcNounNumField");
+  if(nnf) nnf.style.display = ((fc.deck==="all"||fc.deck==="nouns") && fc.nouncards!=="word") ? "" : "none";
   // session-length type + value
   document.querySelectorAll("#fcLimitType button").forEach(b=>{
     b.classList.toggle("on", b.dataset.limittype===fc.limitType);
@@ -1583,12 +1626,10 @@ function renderFcTags(){
   // drop any selected tags that no longer exist in the vocabulary
   const valid=new Set(tags.map(t=>t[0]));
   fc.tags=fc.tags.filter(t=>valid.has(t));
-  // "All (no tag filter)" clears the selection
-  const clear=document.createElement("div");
-  clear.className="wl-chip tag-clear"+(fc.tags.length? "":" on");
-  clear.textContent="All words";
-  clear.onclick=()=>{ fc.tags=[]; renderFcSetup(); };
-  box.appendChild(clear);
+  // "All tags" / "Tags" toggle — the chips only appear once you pick "Tags"
+  syncSeg("fcTagMode","tagmode",fc.tagmode);
+  if(fc.tagmode!=="pick"){ box.style.display="none"; return; }
+  box.style.display="";
   tags.forEach(([t,n])=>{
     const c=document.createElement("div");
     const on=fc.tags.includes(t);
@@ -1659,7 +1700,8 @@ function deckCards(){
   const all=allCards();
   let cards = fc.deck==="all" ? all : all.filter(c=>c.lid===fc.deck);
   // Optional tag filter: keep cards carrying ANY of the selected tags (union).
-  if(fc.tags && fc.tags.length){
+  // Only applies in "Tags" mode; "All tags" studies everything.
+  if(fc.tagmode==="pick" && fc.tags && fc.tags.length){
     cards = cards.filter(c=>(c.tags||[]).some(t=>fc.tags.includes(t)));
   }
   // Verb cards toggle: word-only cards, conjugation cards, or both
@@ -1670,9 +1712,14 @@ function deckCards(){
   if(fc.ctypes && fc.ctypes.length){
     cards = cards.filter(c=>!c.ctype || fc.ctypes.includes(c.ctype));
   }
-  // Noun cards toggle: nominative-only cards, case cards, or both
-  if(fc.nouncards!=="both"){
-    cards = cards.filter(c=>!c.nkind || c.nkind===fc.nouncards);
+  // Noun cards toggle: "word" = just the nominative-singular cards (a subset
+  // of the case cards, so the same cards are tracked either way); "case" = all
+  if(fc.nouncards==="word"){
+    cards = cards.filter(c=>!c.nkind || (c.casek==="nom" && c.nx===0));
+  } else if(fc.nounnum!=="both"){
+    // Number filter: singular or plural forms only
+    const want = fc.nounnum==="sg" ? 0 : 1;
+    cards = cards.filter(c=>!c.nkind || c.nx===want);
   }
   // Case filter: keep chosen cases (empty selection = all)
   if(fc.casetypes && fc.casetypes.length){
@@ -1935,7 +1982,8 @@ function wordStatus(card){
 
 function renderWords(){
   // one row per word/verb/noun — per-form cards would repeat each entry
-  const rows=allCards().filter(c=>c.vkind!=="conj" && c.nkind!=="case").map((c,idx)=>{
+  // (nouns are represented by their Nominative · Singular card)
+  const rows=allCards().filter(c=>c.vkind!=="conj" && (!c.nkind || (c.casek==="nom" && c.nx===0))).map((c,idx)=>{
     const d=cardData(c.key), total=d.right+d.wrong;
     return {idx, pl:c.w[0],pr:c.w[1],en:c.w[2],
       lesson:lessonLabel(c.lid),
@@ -3061,7 +3109,9 @@ document.getElementById("resetAll").onclick=()=>{
 refreshGreet();
 updateAccountUI();
 renderLessons();
-show("lessons");
+// open on Flashcards
+renderFcSetup();
+show("flashcards");
 </script>
 
 <!-- =====================================================================

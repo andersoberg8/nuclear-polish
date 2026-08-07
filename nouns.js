@@ -30,12 +30,14 @@
      • The locative is never used without a preposition (w, na, o, przy).
 
    Flashcards (handled by index.html):
-     • Each noun gets a word-only card (nominative + English), like verbs.
      • Each individual FORM becomes its own flashcard: the front shows
        the case, number and English ("Genitive · Singular — reactor"),
        the answer is that single form (reaktora).
-     • On the Flashcards page, use the "Noun cards" toggle and the
-       "Cases" chips to pick what to drill.
+     • The Nominative · Singular card doubles as the noun's word card —
+       "Nominative only" on the Flashcards page studies just the
+       nominative cards; "All cases" studies everything. Same cards,
+       tracked once.
+     • Use the "Cases" chips to drill specific cases.
 
    Sorted A→Z by the nominative.
    ===================================================================== */
