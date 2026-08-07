@@ -1924,8 +1924,11 @@ function doGrade(gotIt){
   grade(card.key, gotIt);
   session.seen++; gotIt?session.got++:session.missed++;
   if(!gotIt){
-    // re-insert a few cards later in this same session so you practice it again now
-    const reinsertAt=Math.min(session.queue.length, session.i + 4);
+    // Re-insert later in this same session so you practice it again now.
+    // The gap is 8 cards: short enough to still be this session, long enough
+    // that the answer has left working memory (~4 items), so you're testing
+    // recall rather than an echo. Beyond ~10 there's no measurable gain.
+    const reinsertAt=Math.min(session.queue.length, session.i + 9);
     session.queue.splice(reinsertAt,0,card);
   }
   session.i++; showCard();
