@@ -413,6 +413,7 @@
   /* flashcard meaning emoji (answer side) */
   .fc-emoji{font-size:2rem;line-height:1.25;letter-spacing:.1em;margin-top:2px}
   .fc-emoji:empty{display:none}
+  .seg .seg-n{opacity:.55;font-size:.82em;margin-left:3px}
   .fc-note{font-size:.78rem;color:#8a8f98;font-style:italic;margin-top:4px;max-width:90%;line-height:1.35}
   .fc-note:empty{display:none}
   /* noun gender colors — applied to whichever face shows the Polish word.
@@ -530,6 +531,18 @@
       <div class="fc-field" id="fcCtypeField">
         <label>Conjugation types <span class="fc-tag-hint">— one card per form, e.g. "robić · my" in the past → robiliśmy</span></label>
         <div class="wl-filters" id="fcCtypes"></div>
+      </div>
+      <div class="fc-field" id="fcNounField">
+        <label>Noun cards <span class="fc-tag-hint">— nominative-only and case cards are tracked separately</span></label>
+        <div class="seg" id="fcNounCards">
+          <button data-nouncards="word" class="on">Nominative only</button>
+          <button data-nouncards="case">Cases</button>
+          <button data-nouncards="both">Both</button>
+        </div>
+      </div>
+      <div class="fc-field" id="fcCasetypeField">
+        <label>Cases <span class="fc-tag-hint">— one card per form, e.g. Genitive · Singular of "reactor" → reaktora</span></label>
+        <div class="wl-filters" id="fcCasetypes"></div>
       </div>
       <div class="fc-field">
         <label>Show first</label>
@@ -929,8 +942,9 @@
     <p>Open a lesson, tap 🔊 to hear each word (your browser's Polish voice), and tap ✓ when you've learned it.
       Then take the lesson quiz. Your progress saves automatically on this device.</p>
     <h3>Flashcards</h3>
-    <p>Self-graded spaced repetition. Every card comes from one of two files: <code>words.js</code> (words and
-      phrases, including all lesson vocabulary) or <code>verbs.js</code> (verbs). Cards show
+    <p>Self-graded spaced repetition. Every card comes from one of three files: <code>words.js</code> (words and
+      phrases, including all lesson vocabulary), <code>verbs.js</code> (verbs) or <code>nouns.js</code>
+      (noun declensions). Cards show
       English first by default (switch direction or mix them in the setup). You can grade yourself with
       <em>Got it / Missed it</em> at any time — flipping first is optional. Filter a session by deck or by
       tag: any tags you've put on words in <code>words.js</code> show up as chips, and every verb automatically
@@ -945,10 +959,11 @@
     <p>The italic guides are rough English approximations. Polish stress almost always falls on the
       second-to-last syllable. Use the 🔊 button for the real thing.</p>
     <h3>Publish it for your team</h3>
-    <p>The app is three files that live side by side: <code>index.html</code> (the app), <code>words.js</code>
-      (your editable vocabulary bank) and <code>verbs.js</code> (your editable verb bank). To put it online for free
+    <p>The app is four files that live side by side: <code>index.html</code> (the app), <code>words.js</code>
+      (your editable vocabulary bank), <code>verbs.js</code> (your editable verb bank) and <code>nouns.js</code>
+      (your editable noun declension bank). To put it online for free
       with GitHub Pages: create a new public repository,
-      upload <strong>all three</strong> — <code>index.html</code>, <code>words.js</code> and <code>verbs.js</code> — then in
+      upload <strong>all four</strong> — <code>index.html</code>, <code>words.js</code>, <code>verbs.js</code> and <code>nouns.js</code> — then in
       <em>Settings → Pages</em> set the source to your main branch. Your team gets a public URL like
       <code>https://yourname.github.io/nuclear-polish/</code>. See <code>How to publish and share.md</code> for the
       full walkthrough.</p>
@@ -986,6 +1001,7 @@
 
 <script src="words.js"></script>
 <script src="verbs.js"></script>
+<script src="nouns.js"></script>
 <script>
 /* ---------------- COURSE DATA ---------------- */
 const LESSONS = [
@@ -1086,6 +1102,12 @@ function load(){
   let s;
   try{ s = JSON.parse(localStorage.getItem(KEY)) || fresh(); }catch(e){ s = fresh(); }
   s.srs = s.srs || {};            // per-card spaced-repetition data
+  // one-time migration: nouns moved from words.js into nouns.js keep their
+  // review history (old key "common:x" -> new key "nounword:x")
+  (typeof NOUN_BANK!=="undefined" ? NOUN_BANK : []).forEach(n=>{
+    const o="common:"+n.nom.toLowerCase(), k="nounword:"+n.nom;
+    if(s.srs[o] && !s.srs[k]){ s.srs[k]=s.srs[o]; delete s.srs[o]; }
+  });
   return s;
 }
 function fresh(){ return { name:"", learned:{}, quizzes:{}, srs:{} }; }
@@ -1287,7 +1309,7 @@ function finishQuiz(){
 
 /* ---------------- FLASHCARDS + SPACED REPETITION ---------------- */
 const DAY = 86400000;
-const fc = { dir:"en", mode:"due", deck:"all", tags:[], verbcards:"word", ctypes:[], limitType:"none", cardCount:20, timeMin:5 };
+const fc = { dir:"en", mode:"due", deck:"all", tags:[], verbcards:"word", ctypes:[], nouncards:"word", casetypes:[], limitType:"none", cardCount:20, timeMin:5 };
 const CARD_OPTS=[10,20,30,50,100], TIME_OPTS=[3,5,10,15];
 let session = null;
 
@@ -1398,6 +1420,29 @@ function allCards(){
       });
     });
   });
+  // Nouns from nouns.js: a word-only card (nominative + English) plus one
+  // card PER FORM — each case × number the noun actually has ("Genitive ·
+  // Singular — reactor" → "reaktora"). Rows may be freely omitted; "—"
+  // forms are skipped. All tracked separately in spaced repetition.
+  (typeof NOUN_BANK!=="undefined" ? NOUN_BANK : []).forEach((n,i)=>{
+    const extra = splitMeta(n.tags||[]);
+    const nemoji = extra.emoji || n.emoji || "";
+    const nnote = extra.note || n.note || "";
+    const g = n.gender || extra.gender || null;
+    out.push({key:"nounword:"+n.nom, lid:"nouns", i, w:[n.nom,plPronounce(n.nom),n.en],
+      tags:["noun"].concat(extra.tags), gender:g, emoji:nemoji, note:nnote, noun:n, nkind:"word"});
+    const d = n.decl||{};
+    const order = CASE_TYPES.map(t=>t[0]).concat(Object.keys(d).filter(k=>!CASE_LABEL[k]));
+    order.forEach(k=>{
+      if(!Array.isArray(d[k]) || !d[k].length) return;
+      d[k].forEach((f,nx)=>{
+        if(!f || f==="—") return;
+        out.push({key:"nouncase:"+n.nom+":"+k+":"+nx, lid:"nouns", i, w:[n.nom,plPronounce(n.nom),n.en],
+          tags:["noun","declension"].concat(extra.tags), gender:g, emoji:nemoji, note:nnote,
+          noun:n, nkind:"case", casek:k, cform:f, nx});
+      });
+    });
+  });
   return out;
 }
 // Every distinct tag used across the vocabulary, with how many words carry it,
@@ -1411,6 +1456,7 @@ function allTags(){
 function lessonLabel(lid){
   if(lid==="common") return "Common words";
   if(lid==="verbs") return "Verbs";
+  if(lid==="nouns") return "Nouns";
   const l=LESSONS.find(x=>x.id===lid);
   return l ? l.title.replace(/^\d+ · /,"") : lid;
 }
@@ -1439,11 +1485,23 @@ function grade(key, gotIt){
 }
 
 function renderFcSetup(){
+  // card counts, shown on the pick buttons
+  const ac=allCards();
+  const nOf=f=>ac.filter(f).length;
+  const cnt={
+    all:ac.length,
+    common:nOf(c=>c.lid==="common"),
+    verbs:nOf(c=>c.lid==="verbs"),
+    nouns:nOf(c=>c.lid==="nouns"),
+    vword:nOf(c=>c.vkind==="word"),   vconj:nOf(c=>c.vkind==="conj"),
+    nword:nOf(c=>c.nkind==="word"),   ncase:nOf(c=>c.nkind==="case"),
+  };
+  const withN=(label,n)=>`${label} <span class="seg-n">${n}</span>`;
   // deck segmented control
   const deckBox=document.getElementById("fcDeck"); deckBox.innerHTML="";
-  const decks=[["all","All words"],["common","Common words"],["verbs","Verbs"]];
+  const decks=[["all","All words"],["common","Common words"],["verbs","Verbs"],["nouns","Nouns"]];
   decks.forEach(([id,label])=>{
-    const b=document.createElement("button"); b.textContent=label; b.dataset.deck=id;
+    const b=document.createElement("button"); b.innerHTML=withN(label,cnt[id]); b.dataset.deck=id;
     if(id===fc.deck) b.classList.add("on");
     b.onclick=()=>{ fc.deck=id; renderFcSetup(); };
     deckBox.appendChild(b);
@@ -1451,6 +1509,17 @@ function renderFcSetup(){
   renderFcTags();
   syncSeg("fcDir","dir",fc.dir); syncSeg("fcMode","mode",fc.mode);
   syncSeg("fcVerbCards","verbcards",fc.verbcards);
+  // counts on the verb/noun card-kind toggles
+  document.querySelectorAll("#fcVerbCards button").forEach(b=>{
+    const k=b.dataset.verbcards;
+    b.innerHTML=withN(k==="word"?"Word only":k==="conj"?"Conjugations":"Both",
+      k==="word"?cnt.vword:k==="conj"?cnt.vconj:cnt.vword+cnt.vconj);
+  });
+  document.querySelectorAll("#fcNounCards button").forEach(b=>{
+    const k=b.dataset.nouncards;
+    b.innerHTML=withN(k==="word"?"Nominative only":k==="case"?"Cases":"Both",
+      k==="word"?cnt.nword:k==="case"?cnt.ncase:cnt.nword+cnt.ncase);
+  });
   // the verb-cards toggle only matters when the pool can contain verbs
   const vf=document.getElementById("fcVerbField");
   if(vf) vf.style.display = (fc.deck==="all"||fc.deck==="verbs") ? "" : "none";
@@ -1458,6 +1527,13 @@ function renderFcSetup(){
   renderFcCtypes();
   const cf=document.getElementById("fcCtypeField");
   if(cf) cf.style.display = ((fc.deck==="all"||fc.deck==="verbs") && fc.verbcards!=="word") ? "" : "none";
+  // noun controls only matter when the pool can contain nouns
+  syncSeg("fcNounCards","nouncards",fc.nouncards);
+  const nf=document.getElementById("fcNounField");
+  if(nf) nf.style.display = (fc.deck==="all"||fc.deck==="nouns") ? "" : "none";
+  renderFcCasetypes();
+  const caf=document.getElementById("fcCasetypeField");
+  if(caf) caf.style.display = ((fc.deck==="all"||fc.deck==="nouns") && fc.nouncards!=="word") ? "" : "none";
   // session-length type + value
   document.querySelectorAll("#fcLimitType button").forEach(b=>{
     b.classList.toggle("on", b.dataset.limittype===fc.limitType);
@@ -1484,7 +1560,7 @@ function renderFcSetup(){
   const newCards=cards.filter(c=>cardData(c.key).reps===0 && cardData(c.key).wrong===0).length;
   const learning=cards.filter(c=>{const d=cardData(c.key);return d.reps>0 && d.interval<7;}).length;
   const mature=cards.filter(c=>cardData(c.key).interval>=7).length;
-  [["Due now",dueNow],["New",newCards],["Learning",learning],["Mastered",mature]].forEach(([l,n])=>{
+  [["In this selection",cards.length],["Due now",dueNow],["New",newCards],["Learning",learning],["Mastered",mature]].forEach(([l,n])=>{
     const c=document.createElement("div"); c.className="due-chip"; c.innerHTML=`<b>${n}</b>${l}`;
     dueBox.appendChild(c);
   });
@@ -1531,6 +1607,8 @@ function renderFcCtypes(){
   if(!box) return;
   box.innerHTML="";
   fc.ctypes=(fc.ctypes||[]).filter(k=>CONJ_LABEL[k]);
+  const byType={};
+  allCards().forEach(c=>{ if(c.ctype) byType[c.ctype]=(byType[c.ctype]||0)+1; });
   const clear=document.createElement("div");
   clear.className="wl-chip tag-clear"+(fc.ctypes.length? "":" on");
   clear.textContent="All types";
@@ -1540,9 +1618,38 @@ function renderFcCtypes(){
     const on=fc.ctypes.includes(k);
     const c=document.createElement("div");
     c.className="wl-chip"+(on?" on":"");
-    c.textContent=label;
+    c.innerHTML=`${label} <span class="n">${byType[k]||0}</span>`;
     c.onclick=()=>{
       if(on) fc.ctypes=fc.ctypes.filter(x=>x!==k); else fc.ctypes=fc.ctypes.concat(k);
+      renderFcSetup();
+    };
+    box.appendChild(c);
+  });
+}
+// Chips for picking which noun cases to drill (union, like tags).
+// Only cases actually present in nouns.js are offered.
+function renderFcCasetypes(){
+  const box=document.getElementById("fcCasetypes");
+  if(!box) return;
+  box.innerHTML="";
+  const present=new Set();
+  (typeof NOUN_BANK!=="undefined" ? NOUN_BANK : []).forEach(n=>Object.keys(n.decl||{}).forEach(k=>present.add(k)));
+  const avail=CASE_TYPES.filter(([k])=>present.has(k));
+  fc.casetypes=(fc.casetypes||[]).filter(k=>present.has(k));
+  const byCase={};
+  allCards().forEach(c=>{ if(c.casek) byCase[c.casek]=(byCase[c.casek]||0)+1; });
+  const clear=document.createElement("div");
+  clear.className="wl-chip tag-clear"+(fc.casetypes.length? "":" on");
+  clear.textContent="All cases";
+  clear.onclick=()=>{ fc.casetypes=[]; renderFcSetup(); };
+  box.appendChild(clear);
+  avail.forEach(([k,label])=>{
+    const on=fc.casetypes.includes(k);
+    const c=document.createElement("div");
+    c.className="wl-chip"+(on?" on":"");
+    c.innerHTML=`${label} <span class="n">${byCase[k]||0}</span>`;
+    c.onclick=()=>{
+      if(on) fc.casetypes=fc.casetypes.filter(x=>x!==k); else fc.casetypes=fc.casetypes.concat(k);
       renderFcSetup();
     };
     box.appendChild(c);
@@ -1562,6 +1669,14 @@ function deckCards(){
   // Conjugation-type filter: keep chosen types (empty selection = all)
   if(fc.ctypes && fc.ctypes.length){
     cards = cards.filter(c=>!c.ctype || fc.ctypes.includes(c.ctype));
+  }
+  // Noun cards toggle: nominative-only cards, case cards, or both
+  if(fc.nouncards!=="both"){
+    cards = cards.filter(c=>!c.nkind || c.nkind===fc.nouncards);
+  }
+  // Case filter: keep chosen cases (empty selection = all)
+  if(fc.casetypes && fc.casetypes.length){
+    cards = cards.filter(c=>!c.casek || fc.casetypes.includes(c.casek));
   }
   return cards;
 }
@@ -1621,6 +1736,19 @@ const CONJ_TYPES=[
   ["conditional","Conditional"],
 ];
 const CONJ_LABEL=Object.fromEntries(CONJ_TYPES);
+// The noun cases a noun may carry in nouns.js (decl:{...}).
+// Every row is optional; each row is [singular, plural]; "—" forms skipped.
+const CASE_TYPES=[
+  ["nom","Nominative"],
+  ["gen","Genitive"],
+  ["dat","Dative"],
+  ["acc","Accusative"],
+  ["ins","Instrumental"],
+  ["loc","Locative"],
+  ["voc","Vocative"],
+];
+const CASE_LABEL=Object.fromEntries(CASE_TYPES);
+const NUM_LABEL=["Singular","Plural"];
 // Normalized conjugation map — also understands the old verbs.js format
 // (top-level present/future), so nothing breaks mid-upgrade.
 function verbConj(v){
@@ -1662,10 +1790,10 @@ function showCard(){
   if(session.i>=session.queue.length) return finishSession();
   const card=session.queue[session.i];
   const [pl,pr,en]=card.w;
-  // per-form conjugation cards ignore direction: the question is the type +
-  // infinitive + person ("Past · Imperfective — robić · my"), the answer is
-  // that single form. dir "en" so the speaker sits on the answer face.
-  const dir = card.ctype ? "en" : curDir(); session.curDir=dir;
+  // per-form conjugation/case cards ignore direction: the question is
+  // English only, the answer is that single Polish form. dir "en" so the
+  // speaker sits on the answer face.
+  const dir = (card.ctype||card.casek) ? "en" : curDir(); session.curDir=dir;
   const cardEl=document.getElementById("fcCard");
   cardEl.classList.remove("flipped");
   document.getElementById("fcGrade").classList.remove("hidden");
@@ -1680,13 +1808,21 @@ function showCard(){
     back.side=lbl; back.term=card.cform;
     back.pr=card.cform.split("/").map(plPronounce).join(" / ");
   }
+  if(card.casek){
+    // noun case card: "Genitive · Singular — reactor" → "reaktora"
+    const lbl=(CASE_LABEL[card.casek]||card.casek)+" · "+(NUM_LABEL[card.nx]||"");
+    front.side=lbl; front.term=card.noun.en; front.pr="";
+    back.side=lbl; back.term=card.cform;
+    back.pr=card.cform.split("/").map(plPronounce).join(" / ");
+  }
   // gender color + label on whichever face shows the Polish word
   const frontFace=cardEl.querySelector(".front"), backFace=cardEl.querySelector(".back");
   ["gm","gf","gn"].forEach(c=>{ frontFace.classList.remove(c); backFace.classList.remove(c); });
   if(card.gender){
     const plFace = dir==="pl" ? frontFace : backFace;
     plFace.classList.add("g"+card.gender);
-    (dir==="pl" ? front : back).side = GENDER_PL[card.gender];
+    // case cards keep their case label; the color alone shows the gender
+    if(!card.casek && !card.ctype) (dir==="pl" ? front : back).side = GENDER_PL[card.gender];
   }
   document.getElementById("fcFrontSide").textContent=front.side;
   document.getElementById("fcFront").textContent=front.term;
@@ -1720,7 +1856,7 @@ function showCard(){
   const frontSpk=document.getElementById("fcFrontSpeak"), backSpk=document.getElementById("fcBackSpeak");
   frontSpk.classList.toggle("hidden", dir!=="pl");
   backSpk.classList.toggle("hidden", dir!=="en");
-  const speakText = card.ctype ? card.cform.replace(/\//g,", ")
+  const speakText = (card.ctype||card.casek) ? card.cform.replace(/\//g,", ")
                    : vb ? vb.imp+(vb.prf ? ", "+vb.prf : "") : pl;
   const speakPolish=(e)=>{ e.stopPropagation(); speak(speakText); };
   frontSpk.onclick=speakPolish; backSpk.onclick=speakPolish;
@@ -1798,8 +1934,8 @@ function wordStatus(card){
 }
 
 function renderWords(){
-  // one row per word/verb — per-type conjugation cards would repeat each verb
-  const rows=allCards().filter(c=>c.vkind!=="conj").map((c,idx)=>{
+  // one row per word/verb/noun — per-form cards would repeat each entry
+  const rows=allCards().filter(c=>c.vkind!=="conj" && c.nkind!=="case").map((c,idx)=>{
     const d=cardData(c.key), total=d.right+d.wrong;
     return {idx, pl:c.w[0],pr:c.w[1],en:c.w[2],
       lesson:lessonLabel(c.lid),
