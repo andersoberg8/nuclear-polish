@@ -3060,11 +3060,19 @@ document.getElementById("spSelfMiss").onclick=()=>{ if(spSession) spCommitTurn(n
 /* ---------------- TEAM LEADERBOARD (Firebase cloud) ---------------- */
 let cloudUser=null;   // {uid,name,email,photo} when signed in, else null
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+// Leaderboard score = BASE words mastered (dictionary forms only), using the
+// same 21-day rule as the Word list and the flashcard chips, so every screen
+// in the app reports the same number. Inflected forms are counted separately
+// as masteredForms and shown as context, not used for ranking.
+function masteredBaseCount(){
+  return allCards().filter(c=>c.isBase && isMastered(c.key)).length;
+}
+function totalBaseCount(){ return allCards().filter(c=>c.isBase).length; }
 function teamStats(){
-  let mastered=0;
-  allCards().forEach(c=>{ if(cardData(c.key).interval>=7) mastered++; });
+  const mastered=masteredBaseCount();
+  const masteredForms=allCards().filter(c=>isMastered(c.key)).length;
   return { name:(state.name||"Anonymous"), learned:totalLearned(),
-           quizzes:quizzesPassed(), mastered };
+           quizzes:quizzesPassed(), mastered, masteredForms };
 }
 /* full snapshot pushed to the cloud (includes progress for cross-device restore) */
 function appGetCloudDoc(){
@@ -3132,7 +3140,8 @@ document.getElementById("signOutBtn").onclick=()=>{ if(window.cloudSignOut) wind
 
 /* ---- the table ---- */
 function lbRow(rank,r,isMe,tot){
-  const pct=Math.round((Number(r.mastered)||0)/tot*100);
+  // bar is share of ALL base words in the course (guard against a 0 total)
+  const pct=Math.max(0,Math.min(100, Math.round((Number(r.mastered)||0)/(tot||1)*100)));
   const tr=document.createElement("tr"); if(isMe) tr.className="me";
   const ava = r.photo ? `<img class="lb-ava" src="${escapeHtml(r.photo)}" referrerpolicy="no-referrer" alt="">` : `<span class="lb-ava lb-ava-blank"></span>`;
   tr.innerHTML=`<td class="rank">${rank}</td>
@@ -3144,7 +3153,7 @@ function lbRow(rank,r,isMe,tot){
 async function renderLeaderboard(){
   const body=document.getElementById("lbBody");
   const note=document.getElementById("lbNote");
-  const tot=totalWords();
+  const tot=totalBaseCount();   // denominator: every base word in the course
   if(!window.cloudEnabled){
     if(note) note.innerHTML="<strong>Local-only mode.</strong> This board shows just you, because cloud sync isn't set up yet. "+
       "To make it a shared, live leaderboard with Google sign-in, follow <code>How to publish and share.md</code> and paste your Firebase "+
@@ -3155,7 +3164,7 @@ async function renderLeaderboard(){
   }
   if(note){
     note.innerHTML = cloudUser
-      ? "<strong>Shared team leaderboard.</strong> Live across everyone signed in, ranked by flashcard words mastered (7+ day review interval). Refresh the page to pull the latest scores."
+      ? "<strong>Shared team leaderboard.</strong> Live across everyone signed in, ranked by <strong>base words</strong> mastered — dictionary forms at a 21+ day review interval, the same number the Word list shows. Refresh the page to pull the latest scores."
       : "<strong>Sign in to join.</strong> Click “Sign in with Google” (top-right). Your progress then saves to your account, follows you across devices, and appears here.";
   }
   body.innerHTML=`<tr><td colspan="5" class="wl-empty">Loading team…</td></tr>`;
