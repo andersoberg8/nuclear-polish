@@ -102,6 +102,16 @@
   .seg button.on{background:var(--accent);color:#03221f}
   .fc-stage{display:flex;flex-direction:column;align-items:center;gap:18px}
   .fc-counter{color:var(--muted);font-size:.85rem}
+  /* Word list: learned totals + the grammar label under an inflected form */
+  .wl-totals{display:flex;gap:22px;flex-wrap:wrap;margin:2px 0 12px}
+  .wl-totals span{color:var(--muted);font-size:.9rem}
+  .wl-totals b{color:var(--accent);font-size:1.15rem;font-weight:800}
+  .wl-form{color:var(--muted);font-size:.7rem;margin-top:2px;letter-spacing:.01em}
+  .wl-form em{font-style:normal;opacity:.85}
+  /* paused timed session: hide the card so the pause can't buy thinking time */
+  #fcPause{margin:8px auto 0;display:block}
+  .fc-paused .flashcard{filter:blur(9px);opacity:.45;pointer-events:none;transition:filter .2s}
+  .fc-paused .fc-grade{opacity:.4;pointer-events:none}
   .flashcard{width:100%;max-width:460px;perspective:1200px;cursor:pointer}
   .flashcard .inner{display:grid;width:100%}
   .flashcard .face{grid-area:1/1;position:relative;min-height:240px;border-radius:18px;border:1px solid var(--line);
@@ -613,6 +623,7 @@
     <div class="crumb" id="fcBack">← Flashcard options</div>
     <div class="fc-stage">
       <div class="fc-counter" id="fcCounter"></div>
+      <button class="btn ghost small hidden" id="fcPause">⏸ Pause timer</button>
       <div class="flashcard" id="fcCard">
         <div class="inner">
           <div class="face front">
@@ -728,6 +739,8 @@
         <button data-sort="needs">Needs work first</button>
       </div>
     </div>
+    <div class="wl-totals" id="wlTotals"></div>
+    <div class="wl-filters" id="wlScope"></div>
     <div class="wl-filters" id="wlFilters"></div>
     <div class="wl-filters" id="wlTags"></div>
     <table class="lb-table wl-table">
@@ -1416,7 +1429,12 @@ function splitMeta(raw){
 // words.js (COMMON_WORDS) and verbs.js (VERB_BANK). Lesson vocabulary in
 // LESSONS is for the Lessons tab and quizzes only — every lesson word also
 // lives in words.js, which is where its flashcard comes from.
-function allCards(){
+// The card list is derived purely from words.js / verbs.js / nouns.js, which
+// never change while the page is open, so it's built once and cached. Several
+// screens (Word list, flashcard setup, tag counts) ask for it repeatedly.
+let _allCards=null;
+function allCards(){ return _allCards || (_allCards=buildAllCards()); }
+function buildAllCards(){
   const out=[];
   // Common words are keyed by the Polish word itself (not list position), so that
   // inserting/reordering words in words.js never disturbs saved review history.
@@ -1424,7 +1442,8 @@ function allCards(){
   // Anything after the English gloss in words.js (w[2], w[3], …) is an optional tag.
   COMMON_WORDS.forEach((w,i)=>{
     const gt=splitMeta(w.slice(2));
-    out.push({key:"common:"+String(w[0]).toLowerCase(), lid:"common", i, w:[w[0],plPronounce(w[0]),w[1]], tags:gt.tags, gender:gt.gender, emoji:gt.emoji, note:gt.note});
+    out.push({key:"common:"+String(w[0]).toLowerCase(), lid:"common", i, w:[w[0],plPronounce(w[0]),w[1]], tags:gt.tags, gender:gt.gender, emoji:gt.emoji, note:gt.note,
+      isBase:true, base:w[0]});
   });
   // Verbs from verbs.js: each verb becomes TWO separately-tracked cards, both
   // keyed by the imperfective — a word-only card (just the aspect pair) and a
@@ -1437,7 +1456,8 @@ function allCards(){
     const vemoji = extra.emoji || v.emoji || "";
     const vnote = extra.note || v.note || "";
     out.push({key:"verbword:"+v.imp, lid:"verbs", i, w:[pair,pron,v.en],
-      tags:["verb"].concat(extra.tags), gender:extra.gender, emoji:vemoji, note:vnote, verb:v, vkind:"word"});
+      tags:["verb"].concat(extra.tags), gender:extra.gender, emoji:vemoji, note:vnote, verb:v, vkind:"word",
+      isBase:true, base:v.imp});
     // one conjugation card PER FORM: each person of each table the verb
     // actually has becomes its own flashcard ("my + robić, past" →
     // "robiliśmy/robiłyśmy"), tracked separately in spaced repetition.
@@ -1450,7 +1470,8 @@ function allCards(){
         if(!f || f==="—") return;
         out.push({key:"verbconj:"+v.imp+":"+k+":"+pix, lid:"verbs", i, w:[pair,pron,v.en],
           tags:["verb","conjugation"].concat(extra.tags), gender:extra.gender, emoji:vemoji, note:vnote,
-          verb:v, vkind:"conj", ctype:k, cform:f, pix});
+          verb:v, vkind:"conj", ctype:k, cform:f, pix,
+          isBase:false, base:v.imp});
       });
     });
   });
@@ -1473,7 +1494,9 @@ function allCards(){
         if(!f || f==="—") return;
         out.push({key:"nouncase:"+n.nom+":"+k+":"+nx, lid:"nouns", i, w:[n.nom,plPronounce(n.nom),n.en],
           tags:["noun","declension"].concat(extra.tags), gender:g, emoji:nemoji, note:nnote,
-          noun:n, nkind:"case", casek:k, cform:f, nx});
+          noun:n, nkind:"case", casek:k, cform:f, nx,
+          // the nominative singular IS the dictionary form, so it's the base
+          isBase:(k==="nom" && nx===0), base:n.nom});
       });
     });
   });
@@ -1601,8 +1624,8 @@ function renderFcSetup(){
   const cards=deckCards();
   const dueNow=cards.filter(c=>isDue(c.key)).length;
   const newCards=cards.filter(c=>cardData(c.key).reps===0 && cardData(c.key).wrong===0).length;
-  const learning=cards.filter(c=>{const d=cardData(c.key);return d.reps>0 && d.interval<7;}).length;
-  const mature=cards.filter(c=>cardData(c.key).interval>=7).length;
+  const learning=cards.filter(c=>{const d=cardData(c.key);return d.reps>0 && !isMastered(c.key);}).length;
+  const mature=cards.filter(c=>isMastered(c.key)).length;
   [["In this selection",cards.length],["Due now",dueNow],["New",newCards],["Learning",learning],["Mastered",mature]].forEach(([l,n])=>{
     const c=document.createElement("div"); c.className="due-chip"; c.innerHTML=`<b>${n}</b>${l}`;
     dueBox.appendChild(c);
@@ -1743,10 +1766,17 @@ document.getElementById("fcStart").onclick=()=>{
   }
   if(fc.limitType==="cards") pool = pool.slice(0, fc.cardCount);
   session = { queue:pool, i:0, seen:0, got:0, missed:0,
+    firstTry:0, firstSeen:{},        // cards answered correctly on first sight
+    paused:false, pauseLeft:0,
     timed: fc.limitType==="time",
     endTime: fc.limitType==="time" ? Date.now()+fc.timeMin*60000 : 0 };
+  const pauseBtn=document.getElementById("fcPause");
+  pauseBtn.classList.toggle("hidden", !session.timed);
+  pauseBtn.innerHTML="⏸ Pause timer";
+  document.getElementById("view-fcstage").classList.remove("fc-paused");
   if(session.timed){
     session.timer = setInterval(()=>{
+      if(session.paused) return;               // clock stands still while paused
       if(Date.now()>=session.endTime){ finishSession(); }
       else updateCounter();
     }, 1000);
@@ -1763,11 +1793,31 @@ function curDir(){ return fc.dir==="mix" ? (Math.random()<0.5?"pl":"en") : fc.di
 function updateCounter(){
   let txt = `Card ${Math.min(session.i+1,session.queue.length)} of ${session.queue.length}`;
   if(session.timed){
-    const left=Math.max(0,session.endTime-Date.now());
+    // while paused the clock is frozen at whatever was left when you hit pause
+    const left = session.paused ? session.pauseLeft : Math.max(0,session.endTime-Date.now());
     const m=Math.floor(left/60000), s=Math.floor((left%60000)/1000);
     txt += `  ·  ⏱ ${m}:${s.toString().padStart(2,"0")} left`;
+    if(session.paused) txt += "  ·  ⏸ paused";
   }
   document.getElementById("fcCounter").textContent=txt;
+}
+// Pause / resume a timed session. Pausing banks the remaining time and stops
+// the card from being readable, so it can't be used to sneak extra thinking time.
+function setPaused(on){
+  if(!session.timed || session.done) return;
+  session.paused=on;
+  const btn=document.getElementById("fcPause");
+  const stage=document.getElementById("view-fcstage");
+  if(on){
+    session.pauseLeft=Math.max(0,session.endTime-Date.now());
+    btn.innerHTML="▶ Resume";
+    stage.classList.add("fc-paused");
+  } else {
+    session.endTime=Date.now()+session.pauseLeft;   // give the banked time back
+    btn.innerHTML="⏸ Pause timer";
+    stage.classList.remove("fc-paused");
+  }
+  updateCounter();
 }
 const FC_PERSONS=["ja","ty","on/ona","my","wy","oni"];
 const FC_PERSON_EN=["I","you","he/she","we","you (plural)","they"];
@@ -1909,20 +1959,30 @@ function showCard(){
   frontSpk.onclick=speakPolish; backSpk.onclick=speakPolish;
   updateCounter();
   const d=cardData(card.key);
+  const distinct=Object.keys(session.firstSeen||{}).length;
   document.getElementById("fcStat").innerHTML=
     `Seen <b>${session.seen}</b> · Got <b>${session.got}</b> · Missed <b>${session.missed}</b>`+
+    `&nbsp;·&nbsp; first try <b>${session.firstTry||0}</b>/<b>${distinct}</b>`+
     `&nbsp;·&nbsp; this word: <b>${d.right}</b>✓ / <b>${d.wrong}</b>✗`;
 }
 document.getElementById("fcCard").onclick=()=>{
   if(session && session.done) return;   // the finish screen isn't a flippable card
+  if(session && session.paused) return; // card is blurred while paused
   const el=document.getElementById("fcCard");
   const nowFlipped = !el.classList.contains("flipped");   // toggle — flip both ways
   el.classList.toggle("flipped", nowFlipped);
 };
 function doGrade(gotIt){
+  if(session.paused) return;      // no grading while the clock is stopped
   const card=session.queue[session.i];
   grade(card.key, gotIt);
   session.seen++; gotIt?session.got++:session.missed++;
+  // first-try score: was this card right the very first time it appeared this
+  // session? Re-inserted repeats of a missed card can never count.
+  if(!session.firstSeen[card.key]){
+    session.firstSeen[card.key]=true;
+    if(gotIt) session.firstTry++;
+  }
   if(!gotIt){
     // Re-insert later in this same session so you practice it again now.
     // The gap is 8 cards: short enough to still be this session, long enough
@@ -1935,6 +1995,7 @@ function doGrade(gotIt){
 }
 document.getElementById("fcGot").onclick=()=>doGrade(true);
 document.getElementById("fcMiss").onclick=()=>doGrade(false);
+document.getElementById("fcPause").onclick=(e)=>{ e.stopPropagation(); setPaused(!session.paused); };
 
 function finishSession(){
   if(session.done) return; session.done=true;
@@ -1962,42 +2023,84 @@ function finishSession(){
   const fSpk=document.getElementById("fcFrontSpeak"), bSpk=document.getElementById("fcBackSpeak");
   fSpk.classList.add("hidden"); bSpk.classList.add("hidden");
   fSpk.onclick=null; bSpk.onclick=null;
+  document.getElementById("fcPause").classList.add("hidden");
+  document.getElementById("view-fcstage").classList.remove("fc-paused");
+  // first-try rate = how many distinct cards you nailed the first time they
+  // came up, which is the honest read on how the session went (repeats of a
+  // missed card can't inflate it).
+  const distinct=Object.keys(session.firstSeen).length;
+  const pct = distinct ? Math.round(session.firstTry/distinct*100) : 0;
   document.getElementById("fcStat").innerHTML=
-    `Reviewed <b>${session.seen}</b> · Got <b>${session.got}</b> · Missed <b>${session.missed}</b>. `+
+    `Reviewed <b>${session.seen}</b> · Got <b>${session.got}</b> · Missed <b>${session.missed}</b>.<br>`+
+    `<b>${session.firstTry}</b> of <b>${distinct}</b> right on the first try — <b>${pct}%</b>. `+
     `Missed words are scheduled to return soon.`;
 }
 
 /* ---------------- WORD LIST ---------------- */
 const STATUS_LABEL={notstarted:"Not started",struggle:"Struggle",learning:"Learning",mastered:"Mastered"};
 const STATUS_ORDER={struggle:0,learning:1,notstarted:2,mastered:3};
-const wordFilter={status:"all", q:"", sort:"file", dir:1, tags:[]};
+const wordFilter={status:"all", scope:"base", q:"", sort:"file", dir:1, tags:[]};
 
+// A card counts as MASTERED once its interval reaches MASTER_DAYS (21) — the
+// standard "mature card" threshold. Reaching it already requires four correct
+// answers in a row, so there is deliberately no lifetime-accuracy test: old
+// misses shouldn't hold back a word you now recall reliably for weeks.
+const MASTER_DAYS = 21;
+function isMastered(key){ return cardData(key).interval >= MASTER_DAYS; }
 function wordStatus(card){
   const d=cardData(card.key);
   const total=d.right+d.wrong;
   const lessonLearned=(state.learned[card.lid]||{})[card.i];
   if(total===0 && d.reps===0) return lessonLearned ? "learning" : "notstarted";
   const acc = total ? d.right/total : 0;
-  if(d.interval>=21 && acc>=0.8) return "mastered";
+  if(d.interval>=MASTER_DAYS) return "mastered";
   if(d.reps===0 || acc<0.5 || d.ease<=1.6) return "struggle";
   return "learning";
 }
 
 function renderWords(){
-  // one row per word/verb/noun — per-form cards would repeat each entry
-  // (nouns are represented by their Nominative · Singular card)
-  const rows=allCards().filter(c=>c.vkind!=="conj" && (!c.nkind || (c.casek==="nom" && c.nx===0))).map((c,idx)=>{
+  // EVERY card gets a row — base words (dictionary forms) and each inflected
+  // form alike. The Base / Forms chips below switch between them.
+  const rows=allCards().map((c,idx)=>{
     const d=cardData(c.key), total=d.right+d.wrong;
-    return {idx, pl:c.w[0],pr:c.w[1],en:c.w[2],
+    // what to print in the Polish column, and the grammar label beside it
+    const pl = c.cform || c.w[0];
+    let form="";
+    if(c.ctype) form=(CONJ_LABEL[c.ctype]||c.ctype)+" · "+FC_PERSONS[c.pix];
+    else if(c.casek) form=(CASE_LABEL[c.casek]||c.casek)+" · "+(NUM_LABEL[c.nx]||"");
+    return {idx, pl, pr:c.cform?plPronounce(c.cform.split("/")[0]):c.w[1], en:c.w[2],
       lesson:lessonLabel(c.lid),
       tags:c.tags||[],
+      isBase:!!c.isBase, base:c.base||c.w[0], form,
       st:wordStatus(c),
       acc: total? Math.round(d.right/total*100) : null,
       right:d.right, wrong:d.wrong};
   });
-  // counts for filter chips
-  const counts={all:rows.length,notstarted:0,struggle:0,learning:0,mastered:0};
-  rows.forEach(r=>counts[r.st]++);
+  // Base / Forms filter — applied FIRST so the status counts below describe
+  // exactly the set you're looking at.
+  const scope=wordFilter.scope||"base";
+  const scoped = scope==="base" ? rows.filter(r=>r.isBase)
+               : scope==="forms" ? rows.filter(r=>!r.isBase)
+               : rows;
+  const scopeCounts={all:rows.length, base:rows.filter(r=>r.isBase).length,
+                     forms:rows.filter(r=>!r.isBase).length};
+  const sbox=document.getElementById("wlScope"); sbox.innerHTML="";
+  [["base","Base words"],["forms","Forms only"],["all","All"]].forEach(([k,label])=>{
+    const c=document.createElement("div"); c.className="wl-chip"+(scope===k?" on":"");
+    c.innerHTML=`${label} <span class="n">${scopeCounts[k]}</span>`;
+    c.onclick=()=>{ wordFilter.scope=k; renderWords(); };
+    sbox.appendChild(c);
+  });
+  // learned totals — "learned" means Mastered (21+ day interval)
+  const mastered=r=>r.st==="mastered";
+  const bm=rows.filter(r=>r.isBase&&mastered(r)).length;
+  const tm=rows.filter(mastered).length;
+  document.getElementById("wlTotals").innerHTML=
+    `<span><b>${bm}</b> of ${scopeCounts.base} base words learned</span>`+
+    `<span><b>${tm}</b> of ${scopeCounts.all} total word forms learned</span>`;
+  // counts for status filter chips, within the current scope
+  const counts={all:scoped.length,notstarted:0,struggle:0,learning:0,mastered:0};
+  scoped.forEach(r=>counts[r.st]++);
   // filter chips
   const fbox=document.getElementById("wlFilters"); fbox.innerHTML="";
   [["all","All"],["notstarted","Not started"],["struggle","Struggle"],["learning","Learning"],["mastered","Mastered"]]
@@ -2047,12 +2150,13 @@ function renderWords(){
       th.querySelector(".arrow").textContent = wordFilter.sort===key ? (wordFilter.dir>0?"▲":"▼") : "";
       th.onclick=()=>{ wordFilter.dir = wordFilter.sort===key ? -wordFilter.dir : 1; wordFilter.sort=key; renderWords(); };
     });
-  // filter + search
-  let view=rows.filter(r=> wordFilter.status==="all"||r.st===wordFilter.status);
+  // filter + search (within the Base / Forms scope chosen above)
+  let view=scoped.filter(r=> wordFilter.status==="all"||r.st===wordFilter.status);
   // tag chips: keep rows carrying ANY selected tag (union)
   if(wordFilter.tags.length) view=view.filter(r=>r.tags.some(t=>wordFilter.tags.includes(t)));
   const q=wordFilter.q.trim().toLowerCase();
-  if(q) view=view.filter(r=>r.pl.toLowerCase().includes(q)||r.en.toLowerCase().includes(q)||r.tags.some(t=>t.includes(q)));
+  if(q) view=view.filter(r=>r.pl.toLowerCase().includes(q)||r.en.toLowerCase().includes(q)
+    ||r.base.toLowerCase().includes(q)||r.tags.some(t=>t.includes(q)));
   if(wordFilter.sort==="file") view.sort((a,b)=>a.idx-b.idx);   // source order: words.js order, then verbs
   else if(wordFilter.sort==="needs") view.sort((a,b)=>STATUS_ORDER[a.st]-STATUS_ORDER[b.st]);
   else if(wordFilter.sort==="pl") view.sort((a,b)=>a.pl.localeCompare(b.pl,"pl")*wordFilter.dir);
@@ -2062,28 +2166,35 @@ function renderWords(){
     // unpracticed words (no accuracy yet) always sink to the bottom
     view.sort((a,b)=>((a.acc===null)-(b.acc===null)) || (a.acc-b.acc)*wordFilter.dir || a.idx-b.idx);
   else if(wordFilter.sort==="status") view.sort((a,b)=>(STATUS_ORDER[a.st]-STATUS_ORDER[b.st])*wordFilter.dir || a.idx-b.idx);
-  // table
-  const body=document.getElementById("wlBody"); body.innerHTML="";
+  // table — built as one HTML string and written once. With every inflected
+  // form now listed the table can run to thousands of rows, and per-row DOM
+  // building was the bottleneck; tag clicks use delegation (bound once below).
+  const body=document.getElementById("wlBody");
   if(!view.length){ body.innerHTML=`<tr><td colspan="5" class="wl-empty">No words match.</td></tr>`; return; }
-  view.forEach(r=>{
-    const tr=document.createElement("tr");
-    const tagHtml=r.tags.map(t=>`<span class="wl-tag${wordFilter.tags.includes(t)?" on":""}" data-tag="${t}">${t}</span>`).join("");
-    tr.innerHTML=`
-      <td><strong>${r.pl}</strong><div class="pr">${r.pr}</div></td>
-      <td>${r.en}${tagHtml?`<div>${tagHtml}</div>`:""}</td>
-      <td class="acc">${r.lesson}</td>
-      <td class="acc">${r.acc===null?"—":r.acc+"%"} ${r.right+r.wrong?`<span style="opacity:.6">(${r.right}✓/${r.wrong}✗)</span>`:""}</td>
-      <td><span class="status ${r.st}"><span class="dot"></span>${STATUS_LABEL[r.st]}</span></td>`;
-    // clicking an inline tag pill toggles it in the filter
-    tr.querySelectorAll(".wl-tag").forEach(el=>el.onclick=()=>{
-      const t=el.dataset.tag;
-      if(wordFilter.tags.includes(t)) wordFilter.tags=wordFilter.tags.filter(x=>x!==t);
-      else wordFilter.tags=wordFilter.tags.concat(t);
-      renderWords();
-    });
-    body.appendChild(tr);
-  });
+  const sel=new Set(wordFilter.tags);
+  body.innerHTML = view.map(r=>{
+    const tagHtml=r.tags.map(t=>`<span class="wl-tag${sel.has(t)?" on":""}" data-tag="${t}">${t}</span>`).join("");
+    // inflected forms show their grammar label, plus the base word they belong
+    // to (skipped when the form IS the base, e.g. nominative singular)
+    const formHtml = r.form
+      ? `<div class="wl-form">${r.form}${r.pl!==r.base?` · <em>${r.base}</em>`:""}</div>` : "";
+    return `<tr>`+
+      `<td><strong>${r.pl}</strong><div class="pr">${r.pr}</div>${formHtml}</td>`+
+      `<td>${r.en}${tagHtml?`<div>${tagHtml}</div>`:""}</td>`+
+      `<td class="acc">${r.lesson}</td>`+
+      `<td class="acc">${r.acc===null?"—":r.acc+"%"} ${r.right+r.wrong?`<span style="opacity:.6">(${r.right}✓/${r.wrong}✗)</span>`:""}</td>`+
+      `<td><span class="status ${r.st}"><span class="dot"></span>${STATUS_LABEL[r.st]}</span></td>`+
+      `</tr>`;
+  }).join("");
 }
+// clicking an inline tag pill toggles it in the filter (delegated, bound once)
+document.getElementById("wlBody").addEventListener("click", e=>{
+  const el=e.target.closest(".wl-tag"); if(!el) return;
+  const t=el.dataset.tag;
+  if(wordFilter.tags.includes(t)) wordFilter.tags=wordFilter.tags.filter(x=>x!==t);
+  else wordFilter.tags=wordFilter.tags.concat(t);
+  renderWords();
+});
 document.getElementById("wlSearch").addEventListener("input",e=>{ wordFilter.q=e.target.value; renderWords(); });
 
 /* ---------------- NUMBERS TAB ---------------- */
