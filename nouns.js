@@ -1726,7 +1726,7 @@ const NOUN_BANK = [
       loc:["nadziei","nadziejach"],
     } },
 
-  { en:"control room", emoji:"🎛️", nom:"nastawnia", gender:"f",
+  { en:"railway control room", emoji:"🎛️", nom:"nastawnia", gender:"f",
     decl:{
       nom:["nastawnia","nastawnie"],
       gen:["nastawni","nastawni"],
@@ -1890,7 +1890,7 @@ const NOUN_BANK = [
       loc:["odpowiedzi","odpowiedziach"],
     } },
 
-  { en:"fire", emoji:"🔥", nom:"ogień", gender:"m",
+  { en:"fire(small)", emoji:"🔥", nom:"ogień", gender:"m",
     decl:{
       nom:["ogień","ognie"],
       gen:["ognia","ogni"],
@@ -2279,7 +2279,7 @@ const NOUN_BANK = [
       loc:["powodzie","powodach"],
     } },
 
-  { en:"fire", emoji:"🔥", nom:"pożar", gender:"m",
+  { en:"fire(large)", emoji:"🔥", nom:"pożar", gender:"m",
     decl:{
       nom:["pożar","pożary"],
       gen:["pożaru","pożarów"],
@@ -2956,7 +2956,7 @@ const NOUN_BANK = [
       loc:["statku","statkach"],
     } },
 
-  { en:"control room", emoji:"🎛️", nom:"sterownia", gender:"f",
+  { en:"industrial control room", emoji:"🎛️", nom:"sterownia", gender:"f",
     decl:{
       nom:["sterownia","sterownie"],
       gen:["sterowni","sterowni"],
