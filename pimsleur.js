@@ -34,6 +34,8 @@
 
      {t:"c", who:"A", pl:"...", en:"..."}
          A line of the opening/closing conversation. Listen only.
+         who:"A" is the engineer — you — and speaks in the male voice.
+         who:"B" is the Polish colleague, in the female voice.
 
      {t:"s", sec:2}
          Silence, in seconds.
@@ -43,6 +45,16 @@
      en  Its English meaning. Shown in the text panel; never spoken.
      pr  Rough English respelling for the text panel. CAPS = stressed
          syllable. Optional.
+     sex "m" or "f" — forces which voice speaks the line, overriding the
+         default. On a "c" step the default comes from who (A→m, B→f);
+         on l/r/q steps the default is the "Drill voice" setting. Use it
+         when a scene needs a particular speaker, e.g. a male colleague
+         answering: {t:"c", who:"B", sex:"m", ...}.
+
+   KEEP CONVERSATIONS MIXED
+     A scene should always pair a male voice with a female one, so it's
+     obvious two people are talking. Two same-sex speakers in one scene
+     will sound like one person having an argument with themselves.
 
    WRITING A GOOD UNIT
      • Introduce a word, drill it, then bring it back after 3 steps,
@@ -72,7 +84,7 @@ const AUDIO_UNITS = [
 
   /* ---------- OPENING CONVERSATION ---------- */
   {t:"n", say:"Welcome to Nuclear Polish, Unit One. This is a listening and speaking lesson, so there is nothing to read. Put headphones on if you can, and sit somewhere you can talk out loud. Speaking out loud is not optional here — it is the whole exercise."},
-  {t:"n", say:"Listen to this conversation. An American engineer has just arrived at a Polish power plant and stops a colleague in the corridor. Don't try to understand every word. Just listen."},
+  {t:"n", say:"Listen to this conversation. An American engineer has just arrived at a Polish power plant and stops a colleague in the corridor. There are two speakers — the engineer is the man, his Polish colleague is the woman. Don't try to understand every word. Just listen."},
   {t:"s", sec:1},
   {t:"c", who:"A", pl:"Przepraszam, czy pani mówi po angielsku?", en:"Excuse me, do you speak English?"},
   {t:"c", who:"B", pl:"Nie, nie mówię po angielsku.", en:"No, I don't speak English."},
@@ -353,23 +365,23 @@ const AUDIO_UNITS = [
 
   /* ---------- 17b. SECOND SCENE — A PROPER INTRODUCTION ---------- */
   {t:"s", sec:1},
-  {t:"n", say:"One more scene. It's the following morning, and you're being introduced to a man from the operations team. Greet him."},
+  {t:"n", say:"One more scene. It's the following morning, and you're being introduced to a woman from the operations team. Greet her."},
   {t:"q", ask:"Good day.", pl:"Dzień dobry.", en:"Good day.", pr:"jyen DOH-brih"},
   {t:"c", who:"B", pl:"Dzień dobry.", en:"Good day."},
   {t:"n", say:"Introduce yourself and say what you do."},
   {t:"q", ask:"My name is Anders. I am an engineer.", pl:"Nazywam się Anders. Jestem inżynierem.", en:"My name is Anders. I am an engineer.", pr:"nah-ZIH-vahm sheh AHN-ders. YES-tem een-zhih-NYEH-rem"},
-  {t:"n", say:"Now ask him his name."},
-  {t:"q", ask:"What's your name?", pl:"Jak się pan nazywa?", en:"What's your name?", pr:"yahk sheh pahn nah-ZIH-vah"},
-  {t:"c", who:"B", pl:"Nazywam się Marek Kowalski.", en:"My name is Marek Kowalski."},
-  {t:"n", say:"Tell him you're pleased to meet him."},
+  {t:"n", say:"Now ask her name. She's a woman, so watch which word you use."},
+  {t:"q", ask:"What's your name?", pl:"Jak się pani nazywa?", en:"What's your name?", pr:"yahk sheh PAH-nee nah-ZIH-vah"},
+  {t:"c", who:"B", pl:"Nazywam się Marta Kowalska.", en:"My name is Marta Kowalska."},
+  {t:"n", say:"Tell her you're pleased to meet her."},
   {t:"q", ask:"Pleased to meet you.", pl:"Miło mi.", en:"Pleased to meet you.", pr:"MEE-woh mee"},
-  {t:"n", say:"He says something quickly and you catch none of it."},
+  {t:"n", say:"She says something quickly and you catch none of it."},
   {t:"c", who:"B", pl:"Bardzo mi miło. Czy pan jest tutaj pierwszy raz?", en:"Very pleased. Is this your first time here?"},
-  {t:"n", say:"Don't guess. Tell him you don't understand, and ask for it again."},
+  {t:"n", say:"Notice she called you pan — she's speaking to a man. Don't guess at the rest. Tell her you don't understand, and ask for it again."},
   {t:"q", ask:"I don't understand. Once more, please.", pl:"Nie rozumiem. Jeszcze raz, proszę.", en:"I don't understand. Once more, please.", pr:"nyeh roh-ZOO-myem. YESH-cheh rahs, PROH-sheh"},
-  {t:"n", say:"He slows down."},
+  {t:"n", say:"She slows down."},
   {t:"c", who:"B", pl:"Czy pan mówi po polsku?", en:"Do you speak Polish?"},
-  {t:"n", say:"Tell him you speak a little Polish, and thank him."},
+  {t:"n", say:"Tell her you speak a little Polish, and thank her."},
   {t:"q", ask:"I speak a little Polish. Thank you.", pl:"Mówię trochę po polsku. Dziękuję.", en:"I speak a little Polish. Thank you.", pr:"MOO-vyeh TROH-heh poh POL-skoo. jen-KOO-yeh"},
   {t:"c", who:"B", pl:"Bardzo dobrze! Do widzenia.", en:"Very good! Goodbye."},
   {t:"n", say:"And close it out."},
@@ -421,22 +433,50 @@ function unitState(id){
 }
 
 /* user settings live alongside */
-if(!st._opt) st._opt = { rate:0.92, pause:1.35, text:false };
+if(!st._opt) st._opt = { rate:0.92, pause:1.35, text:false, model:"m" };
 var OPT = st._opt;
+if(!OPT.model) OPT.model = "m";
 
-/* ---------------- voices ---------------- */
-var vPL = null, vEN = null, voicesReady = false;
+/* ---------------- voices ----------------
+   Two Polish speakers, so you can tell who is talking. The engineer (you)
+   is the male voice; the Polish colleague is the female one. Most machines
+   ship with only ONE Polish voice, so when we can't find one of each we
+   fall back to pitch-shifting a single voice, which is still easy to tell
+   apart. Voice names are the only gender signal the Web Speech API gives us.
+------------------------------------------------------------------------- */
+var vPLm = null, vPLf = null, vEN = null, voicesReady = false;
+var plCount = 0, plConfident = false;
+var RE_M = /krzysztof|jacek|\bjan\b|adam|\bmarek\b|piotr|tomasz|zbigniew|bartek|\bmale\b|męski/i;
+var RE_F = /zosia|paulina|\bewa\b|\bmaja\b|agnieszka|ania|\banna\b|kasia|magda|\bfemale\b|żeński/i;
+
 function pickVoices(){
   var vs = (window.speechSynthesis && speechSynthesis.getVoices()) || [];
   if(!vs.length) return;
   voicesReady = true;
-  vPL = vs.filter(function(v){ return /^pl/i.test(v.lang||""); })[0] || null;
-  var en = vs.filter(function(v){ return /^en/i.test(v.lang||""); });
+
+  var pl = vs.filter(function(v){ return /^pl/i.test(v.lang || ""); });
+  plCount = pl.length;
+  var m = pl.filter(function(v){ return RE_M.test(v.name || ""); })[0] || null;
+  var f = pl.filter(function(v){ return RE_F.test(v.name || ""); })[0] || null;
+  plConfident = !!(m && f);
+  if(!m && !f){ m = f = pl[0] || null; }
+  else if(!m){ m = pl.filter(function(v){ return v !== f; })[0] || f; }
+  else if(!f){ f = pl.filter(function(v){ return v !== m; })[0] || m; }
+  vPLm = m; vPLf = f;
+
+  var en = vs.filter(function(v){ return /^en/i.test(v.lang || ""); });
   vEN = en.filter(function(v){ return /^en[-_]?US/i.test(v.lang); })[0] || en[0] || null;
+
   var w = document.getElementById("auVoiceWarn");
-  if(w) w.innerHTML = vPL
-    ? ""
-    : "<strong>No Polish voice found on this device.</strong> The player will still run, but the Polish will be read by an English voice and will sound wrong. On Windows add a Polish voice under Settings → Time &amp; language → Speech; on a Mac under System Settings → Accessibility → Spoken Content → System Voice → Manage Voices; on iOS and Android install the Polish language pack. Chrome and Edge usually have one built in.";
+  if(!w) return;
+  if(!plCount){
+    w.innerHTML = "<strong>No Polish voice found on this device.</strong> The player will still run, but the Polish will be read by an English voice and will sound wrong. On a Mac, add one under System Settings → Accessibility → Spoken Content → System Voice → Manage Voices; on Windows under Settings → Time &amp; language → Speech; on iOS and Android install the Polish language pack.";
+  } else if(!plConfident){
+    w.innerHTML = "<strong>Only one Polish voice is installed</strong>" + (plCount > 1 ? " that we can identify by name" : "") +
+      ", so the two speakers are told apart by pitch instead — the engineer lower, the colleague higher. It works, but installing a second Polish voice of the opposite gender makes the conversations much clearer. On a Mac: System Settings → Accessibility → Spoken Content → System Voice → Manage Voices → Polish.";
+  } else {
+    w.innerHTML = "";
+  }
 }
 if(window.speechSynthesis){
   pickVoices();
@@ -457,13 +497,28 @@ function stopAll(){
   try { if(window.speechSynthesis) speechSynthesis.cancel(); } catch(e){}
 }
 
-function say(text, lang){
+/* How a Polish line should sound, given which of the two speakers it is. */
+function plStyle(sex){
+  var f = (sex === "f");
+  var s = { voice: f ? vPLf : vPLm, rate: OPT.rate, pitch: 1 };
+  if(!plConfident){
+    // One voice doing both parts — separate them by pitch and a little by pace.
+    s.pitch = f ? 1.24 : 0.76;
+    s.rate  = OPT.rate * (f ? 1.02 : 0.95);
+  }
+  return s;
+}
+
+function say(text, lang, sex){
   return new Promise(function(res){
     if(!window.speechSynthesis || !text){ timer = setTimeout(res, 300); return; }
     var u = new SpeechSynthesisUtterance(String(text));
-    if(lang === "pl"){ u.lang = "pl-PL"; if(vPL) u.voice = vPL; u.rate = OPT.rate; }
-    else            { u.lang = "en-US"; if(vEN) u.voice = vEN; u.rate = 1.0; }
-    u.pitch = 1;
+    if(lang === "pl"){
+      var s = plStyle(sex);
+      u.lang = "pl-PL"; if(s.voice) u.voice = s.voice; u.rate = s.rate; u.pitch = s.pitch;
+    } else {
+      u.lang = "en-US"; if(vEN) u.voice = vEN; u.rate = 1.0; u.pitch = 1;
+    }
     var done = false, guard;
     function fin(){ if(done) return; done = true; clearTimeout(guard); live = null; res(); }
     u.onend = fin; u.onerror = fin;
@@ -474,9 +529,16 @@ function say(text, lang){
     catch(e){ fin(); }
   });
 }
-function sayTimed(text, lang){
+function sayTimed(text, lang, sex){
   var t0 = Date.now();
-  return say(text, lang).then(function(){ return Date.now() - t0; });
+  return say(text, lang, sex).then(function(){ return Date.now() - t0; });
+}
+
+/* Which voice models the drill lines. "m" / "f" / "alt" (alternating). */
+var altN = 0;
+function modelSex(){
+  if(OPT.model === "alt") return (altN++ % 2) ? "f" : "m";
+  return OPT.model === "f" ? "f" : "m";
 }
 function wait(ms){
   return new Promise(function(res){ timer = setTimeout(res, Math.max(0, ms)); });
@@ -538,6 +600,10 @@ var CSS = ''
 + '.au-orb.narr{border-color:var(--accent2);box-shadow:0 0 0 6px rgba(111,208,220,.10)}'
 + '.au-orb.listen{border-color:var(--accent);box-shadow:0 0 0 6px rgba(25,191,174,.12)}'
 + '.au-orb.turn{border-color:var(--warn);background:rgba(240,151,92,.09);animation:au-pulse 1.5s ease-in-out infinite}'
++ '.au-orb.him{border-color:var(--accent2);box-shadow:0 0 0 6px rgba(111,208,220,.13)}'
++ '.au-orb.her{border-color:var(--gold);box-shadow:0 0 0 6px rgba(227,189,85,.13)}'
++ '.au-who{font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;font-weight:800;margin-bottom:5px}'
++ '.au-who.him{color:var(--accent2)}.au-who.her{color:var(--gold)}'
 + '@keyframes au-pulse{0%,100%{box-shadow:0 0 0 0 rgba(240,151,92,.34)}50%{box-shadow:0 0 0 16px rgba(240,151,92,0)}}'
 + '.au-cue{font-size:1.05rem;color:var(--text);min-height:2.6em;max-width:34em;margin:0 auto;line-height:1.5}'
 + '.au-cue em{color:var(--muted);font-style:normal}'
@@ -602,6 +668,9 @@ var STAGE_HTML = ''
 + '    <label>Time to answer'
 + '      <select id="auPause"><option value="1.05">short</option><option value="1.35">normal</option>'
 + '      <option value="1.9">long</option></select></label>'
++ '    <label>Drill voice'
++ '      <select id="auModel"><option value="m">man</option><option value="f">woman</option>'
++ '      <option value="alt">both</option></select></label>'
 + '    <label><input type="checkbox" id="auShowText"> Show text</label>'
 + '  </div>'
 + '</div>'
@@ -700,11 +769,12 @@ function boot(){
 
   var el = {};
   ["auPhase","auOrb","auCue","auText","auFill","auElapsed","auTotal","auStepNo",
-   "auPlay","auPrev","auNext","auRep","auRestart","auRate","auPause","auShowText",
+   "auPlay","auPrev","auNext","auRep","auRestart","auRate","auPause","auShowText","auModel",
    "auTitle","auDesc","auDone","auBack"].forEach(function(id){ el[id] = document.getElementById(id); });
 
   el.auRate.value = String(OPT.rate);
   el.auPause.value = String(OPT.pause);
+  el.auModel.value = OPT.model;
   el.auShowText.checked = !!OPT.text;
 
   function open(u){
@@ -724,9 +794,10 @@ function boot(){
     goto("stage");
   }
 
-  function setPhase(cls, label){
+  function setPhase(cls, label, glyph){
     el.auOrb.className = "au-orb" + (cls ? " " + cls : "");
-    el.auOrb.textContent = cls === "turn" ? "🗣" : (cls === "narr" ? "🎧" : (cls === "listen" ? "🔊" : "🎧"));
+    el.auOrb.textContent = glyph
+      || (cls === "turn" ? "🗣" : (cls === "narr" ? "🎧" : (cls === "listen" ? "🔊" : "🎧")));
     el.auPhase.textContent = label;
   }
 
@@ -739,9 +810,15 @@ function boot(){
     el.auPlay.textContent = playing ? "❚❚" : "▶";
   }
 
-  function showText(s){
+  function showText(s, sex){
     if(!OPT.text || !s || !s.pl){ el.auText.classList.add("hidden"); return; }
-    el.auText.innerHTML = '<div class="p">' + s.pl + "</div>"
+    var who = "";
+    if(s.t === "c"){
+      var f = (sex === "f");
+      who = '<div class="au-who ' + (f ? "her" : "him") + '">'
+          + (f ? "👩 the colleague" : "👨 the engineer") + "</div>";
+    }
+    el.auText.innerHTML = who + '<div class="p">' + s.pl + "</div>"
       + (s.en ? '<div class="e">' + s.en + "</div>" : "")
       + (s.pr ? '<div class="r">' + s.pr + "</div>" : "");
     el.auText.classList.remove("hidden");
@@ -761,10 +838,15 @@ function boot(){
       return say(s.say, "en").then(function(){ return alive() ? wait(350) : null; });
     }
     if(s.t === "c"){
-      setPhase("listen", s.who === "A" ? "Conversation · the engineer" : "Conversation · the colleague");
-      cue(s.who === "A" ? "The engineer speaks…" : "The colleague answers…");
-      showText(s);
-      return say(s.pl, "pl").then(function(){ return alive() ? wait(650) : null; });
+      // Sex drives the voice. Default: A is the engineer (male), B the colleague (female).
+      var csex = s.sex || (s.who === "A" ? "m" : "f");
+      var her = (csex === "f");
+      setPhase(her ? "her" : "him",
+               her ? "Conversation · the colleague" : "Conversation · the engineer",
+               her ? "👩" : "👨");
+      cue(her ? "The colleague speaks…" : "The engineer speaks…");
+      showText(s, csex);
+      return say(s.pl, "pl", csex).then(function(){ return alive() ? wait(650) : null; });
     }
     if(s.t === "s"){
       setPhase("", "…");
@@ -773,19 +855,20 @@ function boot(){
       return wait((s.sec || 1) * 1000);
     }
     if(s.t === "l"){
+      var lsex = s.sex || modelSex();
       setPhase("listen", "Listen");
       cue("Listen.");
       showText(s);
-      return say(s.pl, "pl").then(function(){ return alive() ? wait(500) : null; });
+      return say(s.pl, "pl", lsex).then(function(){ return alive() ? wait(500) : null; });
     }
     if(s.t === "r"){
-      var times = s.x || 1, n = 0;
+      var times = s.x || 1, n = 0, rsex = s.sex || modelSex();
       showText(s);
       var once = function(){
         if(!alive()) return null;
         setPhase("listen", "Listen");
         cue("Listen" + (times > 1 ? " (" + (n + 1) + " of " + times + ")" : "") + ".");
-        return sayTimed(s.pl, "pl").then(function(d){
+        return sayTimed(s.pl, "pl", rsex).then(function(d){
           if(!alive()) return null;
           setPhase("turn", "Your turn");
           cue("Say it out loud.");
@@ -798,6 +881,7 @@ function boot(){
       return once();
     }
     if(s.t === "q"){
+      var qsex = s.sex || modelSex();
       setPhase("narr", "Instructor");
       cue("<em>" + s.ask + "</em>");
       showText(null);
@@ -810,7 +894,7 @@ function boot(){
         if(!alive()) return null;
         setPhase("listen", "The answer");
         showText(s);
-        return sayTimed(s.pl, "pl");
+        return sayTimed(s.pl, "pl", qsex);
       }).then(function(d){
         if(!alive()) return null;
         setPhase("turn", "Repeat it");
@@ -880,7 +964,12 @@ function boot(){
     unitState(U.id).idx = idx; persist();
     el.auDone.classList.add("hidden");
     paint();
-    if(wasPlaying) start(); else { showText(U.steps[idx]); cue("Ready at step " + (idx + 1) + "."); }
+    if(wasPlaying) start();
+    else {
+      var s = U.steps[idx];
+      showText(s, s && (s.sex || (s.who === "A" ? "m" : "f")));
+      cue("Ready at step " + (idx + 1) + ".");
+    }
   }
 
   /* ---------- wake lock ---------- */
@@ -915,10 +1004,16 @@ function boot(){
     OPT.pause = parseFloat(el.auPause.value); persist();
     if(U){ TL = unitTimeline(U); el.auTotal.textContent = mmss(TL.total); paint(); }
   };
+  el.auModel.onchange = function(){
+    OPT.model = el.auModel.value; altN = 0; persist();
+  };
   el.auShowText.onchange = function(){
     OPT.text = el.auShowText.checked; persist();
-    if(U && !OPT.text) el.auText.classList.add("hidden");
-    else if(U) showText(U.steps[Math.min(idx, U.steps.length - 1)]);
+    if(U && !OPT.text){ el.auText.classList.add("hidden"); return; }
+    if(U){
+      var s = U.steps[Math.min(idx, U.steps.length - 1)];
+      showText(s, s && (s.sex || (s.who === "A" ? "m" : "f")));
+    }
   };
 
   // Browsers cut speech in background tabs — pause rather than lose the thread.
