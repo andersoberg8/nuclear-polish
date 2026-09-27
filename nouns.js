@@ -2783,6 +2783,16 @@ const NOUN_BANK = [
       loc:["sile","siłach"],
     } },
 
+  { en:"sock", emoji:"🧦", nom:"skarpeta", gender:"f",
+    decl:{
+      nom:["skarpeta","skarpety"],
+      gen:["skarpety","skarpet"],
+      dat:["skarpecie","skarpetom"],
+      acc:["skarpetę","skarpety"],
+      ins:["skarpetą","skarpetami"],
+      loc:["skarpecie","skarpetach"],
+    } },
+
   { en:"shop / store", emoji:"🏪", nom:"sklep", gender:"m",
     decl:{
       nom:["sklep","sklepy"],

@@ -112,7 +112,33 @@
   #fcPause{margin:8px auto 0;display:block}
   .fc-paused .flashcard{filter:blur(9px);opacity:.45;pointer-events:none;transition:filter .2s}
   .fc-paused .fc-grade{opacity:.4;pointer-events:none}
-  .flashcard{width:100%;max-width:460px;perspective:1200px;cursor:pointer}
+  .flashcard{width:100%;max-width:460px;perspective:1200px;cursor:pointer;position:relative}
+  /* "Hard to say" pronunciation flag — top-right of the card, both faces */
+  .fc-pron{position:absolute;top:10px;right:10px;z-index:3;display:flex;align-items:center;gap:6px;
+    background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:999px;
+    padding:4px 11px 4px 8px;font:inherit;font-size:.72rem;font-weight:600;cursor:pointer;
+    transition:border-color .15s,color .15s,background .15s}
+  .fc-pron:hover{border-color:var(--warn);color:var(--text)}
+  .fc-pron:focus-visible{outline:2px solid var(--warn);outline-offset:2px}
+  .fc-pron .box{width:14px;height:14px;border-radius:4px;border:1.5px solid currentColor;display:inline-flex;
+    align-items:center;justify-content:center;font-size:.7rem;line-height:1}
+  .fc-pron[aria-pressed="true"]{border-color:var(--warn);color:var(--warn);background:rgba(240,151,92,.12)}
+  .fc-pron[aria-pressed="true"] .box{background:var(--warn);border-color:var(--warn);color:#1b0e05}
+  .fc-pron[aria-pressed="true"] .box::after{content:"✓"}
+  .fc-pron.hidden{display:none}
+  /* only on the Polish side — on the English side it would hint at the answer */
+  .flashcard[data-plface="front"].flipped .fc-pron,
+  .flashcard[data-plface="back"]:not(.flipped) .fc-pron{display:none}
+  .wl-pron{cursor:pointer;border:0;background:none;padding:0 0 0 6px;font-size:.8rem;opacity:.3;vertical-align:middle;filter:grayscale(1)}
+  .wl-pron.on{opacity:1;filter:none}
+  .wl-pron:hover{opacity:.8}
+  .wl-chip.pron .dot{background:var(--warn)}
+  .wl-tutor{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:4px 0 10px;color:var(--muted);font-size:.85rem}
+  .wl-tutor.hidden{display:none}
+  .wl-tutor button{background:var(--panel2);border:1px solid var(--warn);color:var(--text);border-radius:10px;
+    padding:7px 13px;font:inherit;font-weight:600;cursor:pointer}
+  .wl-tutor textarea{width:100%;min-height:140px;background:var(--panel);color:var(--text);border:1px solid var(--line);
+    border-radius:10px;padding:10px;font:inherit;font-size:.85rem}
   .flashcard .inner{display:grid;width:100%}
   .flashcard .face{grid-area:1/1;position:relative;min-height:240px;border-radius:18px;border:1px solid var(--line);
     background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;
@@ -632,6 +658,8 @@
       <div class="fc-counter" id="fcCounter"></div>
       <button class="btn ghost small hidden" id="fcPause">⏸ Pause timer</button>
       <div class="flashcard" id="fcCard">
+        <button type="button" class="fc-pron hidden" id="fcPron" aria-pressed="false"
+          title="Mark this card as hard to pronounce. Flagged cards are listed in the Word list for your tutor."><span class="box"></span>Hard to say</button>
         <div class="inner">
           <div class="face front">
             <div class="side" id="fcFrontSide"></div>
@@ -750,6 +778,7 @@
     <div class="wl-filters" id="wlScope"></div>
     <div class="wl-filters" id="wlFilters"></div>
     <div class="wl-filters" id="wlTags"></div>
+    <div class="wl-tutor hidden" id="wlTutor"></div>
     <table class="lb-table wl-table">
       <thead><tr>
         <th class="sortable" id="wlThPl">Polish <span class="arrow"></span></th>
@@ -1154,6 +1183,7 @@ function load(){
   let s;
   try{ s = JSON.parse(localStorage.getItem(KEY)) || fresh(); }catch(e){ s = fresh(); }
   s.srs = s.srs || {};            // per-card spaced-repetition data
+  s.pron = s.pron || {};          // "Hard to say" flags: card key → +time flagged / −time cleared
   // one-time migration: nouns moved from words.js into nouns.js keep their
   // review history. Old keys ("common:x", then briefly "nounword:x") both
   // map onto the noun's Nominative · Singular case card.
@@ -1172,7 +1202,11 @@ function load(){
   });
   return s;
 }
-function fresh(){ return { name:"", learned:{}, quizzes:{}, srs:{} }; }
+function fresh(){ return { name:"", learned:{}, quizzes:{}, srs:{}, pron:{} }; }
+// Pronunciation ("Hard to say") flags. Stored with a timestamp, negative when
+// cleared, so the newest change wins when two devices sync.
+function isPronFlagged(key){ return (state.pron[key]||0) > 0; }
+function setPronFlag(key,on){ state.pron[key] = on ? Date.now() : -Date.now(); save(); }
 function save(){
   localStorage.setItem(KEY, JSON.stringify(state));
   if(window.cloudEnabled && cloudUser && window.cloudPush){ window.cloudPush(appGetCloudDoc()); }
@@ -1950,6 +1984,8 @@ function showCard(){
   const dir = (card.ctype||card.casek||card.pcase) ? "en" : curDir(); session.curDir=dir;
   const cardEl=document.getElementById("fcCard");
   cardEl.classList.remove("flipped");
+  cardEl.dataset.plface = dir==="pl" ? "front" : "back";   // which face shows Polish
+  syncPronBtn(card);
   document.getElementById("fcGrade").classList.remove("hidden");
   const front = dir==="pl" ? {side:"polski",term:pl,pr:pr} : {side:"angielski",term:en,pr:""};
   const back  = dir==="pl" ? {side:"angielski",term:en,pr:""} : {side:"polski",term:pl,pr:pr};
@@ -2029,6 +2065,18 @@ function showCard(){
     `&nbsp;·&nbsp; first try <b>${session.firstTry||0}</b>/<b>${distinct}</b>`+
     `&nbsp;·&nbsp; this word: <b>${d.right}</b>✓ / <b>${d.wrong}</b>✗`;
 }
+function syncPronBtn(card){
+  const b=document.getElementById("fcPron");
+  b.classList.toggle("hidden", !card);
+  if(card) b.setAttribute("aria-pressed", isPronFlagged(card.key) ? "true" : "false");
+}
+document.getElementById("fcPron").onclick=(e)=>{
+  e.stopPropagation();                  // don't flip the card
+  if(!session || session.done || session.paused) return;
+  const card=session.queue[session.i]; if(!card) return;
+  setPronFlag(card.key, !isPronFlagged(card.key));
+  syncPronBtn(card);
+};
 document.getElementById("fcCard").onclick=()=>{
   if(session && session.done) return;   // the finish screen isn't a flippable card
   if(session && session.paused) return; // card is blurred while paused
@@ -2068,6 +2116,7 @@ function finishSession(){
   const cardEl=document.getElementById("fcCard");
   cardEl.classList.remove("flipped");
   cardEl.classList.remove("verb");
+  syncPronBtn(null);
   ["gm","gf","gn"].forEach(c=>{
     cardEl.querySelector(".front").classList.remove(c);
     cardEl.querySelector(".back").classList.remove(c);
@@ -2101,6 +2150,35 @@ function finishSession(){
 }
 
 /* ---------------- WORD LIST ---------------- */
+// Tutor bar: shown while the "Hard to say" chip is selected. Builds a plain
+// text list (Polish — English, with the grammar form) you can paste anywhere.
+function tutorListText(flagged){
+  return flagged.map(r=>`${r.pl} — ${r.en}${r.form?` (${r.form}${r.pl!==r.base?`, from ${r.base}`:""})`:""}`).join("\n");
+}
+function renderTutorBar(flagged){
+  const bar=document.getElementById("wlTutor");
+  if(wordFilter.status!=="pron"){ bar.classList.add("hidden"); bar.innerHTML=""; return; }
+  bar.classList.remove("hidden");
+  if(!flagged.length){
+    bar.innerHTML=`<span>No cards flagged yet. Tap <b>Hard to say</b> on a flashcard, or 🗣 next to any word below.</span>`;
+    return;
+  }
+  bar.innerHTML=`<button type="button" id="wlTutorCopy">Copy list for tutor</button>`+
+    `<span id="wlTutorMsg">${flagged.length} card${flagged.length===1?"":"s"} flagged</span>`;
+  document.getElementById("wlTutorCopy").onclick=()=>{
+    const text=tutorListText(flagged);
+    const msg=document.getElementById("wlTutorMsg");
+    const fallback=()=>{
+      let ta=document.getElementById("wlTutorText");
+      if(!ta){ ta=document.createElement("textarea"); ta.id="wlTutorText"; ta.readOnly=true; bar.appendChild(ta); }
+      ta.value=text; ta.focus(); ta.select();
+      msg.textContent="Couldn't copy automatically. The list is selected below; copy it from there.";
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(()=>{ msg.textContent="Copied "+flagged.length+" cards. Paste into an email or doc."; }, fallback);
+    } else fallback();
+  };
+}
 const STATUS_LABEL={notstarted:"Not started",struggle:"Struggle",learning:"Learning",mastered:"Mastered"};
 const STATUS_ORDER={struggle:0,learning:1,notstarted:2,mastered:3};
 const wordFilter={status:"all", scope:"base", q:"", sort:"file", dir:1, tags:[]};
@@ -2133,7 +2211,7 @@ function renderWords(){
     if(c.ctype) form=(CONJ_LABEL[c.ctype]||c.ctype)+" · "+FC_PERSONS[c.pix];
     else if(c.casek) form=(CASE_LABEL[c.casek]||c.casek)+" · "+(NUM_LABEL[c.nx]||"");
     else if(c.pcase) form=(CASE_LABEL[c.pcase]||c.pcase)+" · "+(POSS_COL_LABEL[c.pcol]||"");
-    return {idx, pl, pr:c.cform?plPronounce(c.cform.split("/")[0]):c.w[1], en:c.w[2],
+    return {idx, key:c.key, flag:isPronFlagged(c.key), pl, pr:c.cform?plPronounce(c.cform.split("/")[0]):c.w[1], en:c.w[2],
       lesson:lessonLabel(c.lid),
       tags:c.tags||[],
       isBase:!!c.isBase, base:c.base||c.w[0], form,
@@ -2175,6 +2253,12 @@ function renderWords(){
       c.onclick=()=>{ wordFilter.status=k; renderWords(); };
       fbox.appendChild(c);
     });
+  const pc=document.createElement("div"); pc.className="wl-chip pron"+(wordFilter.status==="pron"?" on":"");
+  pc.title="Cards you've marked as hard to pronounce — your list for a tutor";
+  pc.innerHTML=`<span class="dot"></span>Hard to say <span class="n">${rows.filter(r=>r.flag).length}</span>`;
+  pc.onclick=()=>{ wordFilter.status="pron"; renderWords(); };
+  fbox.appendChild(pc);
+  renderTutorBar(rows.filter(r=>r.flag));
   // tag filter chips (multi-select union). Only shown once tags exist.
   const tbox=document.getElementById("wlTags"); tbox.innerHTML="";
   const tags=allTags();
@@ -2215,8 +2299,10 @@ function renderWords(){
       th.querySelector(".arrow").textContent = wordFilter.sort===key ? (wordFilter.dir>0?"▲":"▼") : "";
       th.onclick=()=>{ wordFilter.dir = wordFilter.sort===key ? -wordFilter.dir : 1; wordFilter.sort=key; renderWords(); };
     });
-  // filter + search (within the Base / Forms scope chosen above)
-  let view=scoped.filter(r=> wordFilter.status==="all"||r.st===wordFilter.status);
+  // filter + search (within the Base / Forms scope chosen above). The
+  // "Hard to say" chip ignores the scope so every flagged card shows.
+  let view = wordFilter.status==="pron" ? rows.filter(r=>r.flag)
+           : scoped.filter(r=> wordFilter.status==="all"||r.st===wordFilter.status);
   // tag chips: keep rows carrying ANY selected tag (union)
   if(wordFilter.tags.length) view=view.filter(r=>r.tags.some(t=>wordFilter.tags.includes(t)));
   const q=wordFilter.q.trim().toLowerCase();
@@ -2244,7 +2330,7 @@ function renderWords(){
     const formHtml = r.form
       ? `<div class="wl-form">${r.form}${r.pl!==r.base?` · <em>${r.base}</em>`:""}</div>` : "";
     return `<tr>`+
-      `<td><strong>${r.pl}</strong><div class="pr">${r.pr}</div>${formHtml}</td>`+
+      `<td><strong>${r.pl}</strong><button class="wl-pron${r.flag?" on":""}" data-key="${r.key}" title="${r.flag?"Remove from":"Add to"} your Hard to say list">🗣</button><div class="pr">${r.pr}</div>${formHtml}</td>`+
       `<td>${r.en}${tagHtml?`<div>${tagHtml}</div>`:""}</td>`+
       `<td class="acc">${r.lesson}</td>`+
       `<td class="acc">${r.acc===null?"—":r.acc+"%"} ${r.right+r.wrong?`<span style="opacity:.6">(${r.right}✓/${r.wrong}✗)</span>`:""}</td>`+
@@ -2254,6 +2340,8 @@ function renderWords(){
 }
 // clicking an inline tag pill toggles it in the filter (delegated, bound once)
 document.getElementById("wlBody").addEventListener("click", e=>{
+  const pb=e.target.closest(".wl-pron");
+  if(pb){ setPronFlag(pb.dataset.key, !isPronFlagged(pb.dataset.key)); renderWords(); return; }
   const el=e.target.closest(".wl-tag"); if(!el) return;
   const t=el.dataset.tag;
   if(wordFilter.tags.includes(t)) wordFilter.tags=wordFilter.tags.filter(x=>x!==t);
@@ -3143,7 +3231,7 @@ function teamStats(){
 function appGetCloudDoc(){
   const ts=teamStats();
   return { name: state.name || (cloudUser&&cloudUser.name) || "Anonymous",
-           learned: state.learned, quizzes: state.quizzes, srs: state.srs,
+           learned: state.learned, quizzes: state.quizzes, srs: state.srs, pron: state.pron,
            stat_learned: ts.learned, stat_quizzes: ts.quizzes, stat_mastered: ts.mastered };
 }
 /* merge a cloud document into local state without losing local progress */
@@ -3161,6 +3249,8 @@ function mergeCloudIntoState(d){
     const ah=(a.right||0)+(a.wrong||0), bh=(b.right||0)+(b.wrong||0);
     if(bh>ah) state.srs[k]=b;     // keep the more-reviewed version
   }
+  const dp=d.pron||{};
+  for(const k in dp){ if(Math.abs(dp[k]) > Math.abs(state.pron[k]||0)) state.pron[k]=dp[k]; }
   if(d.name && !state.name) state.name=d.name;
 }
 /* called by the Firebase module on auth changes */
@@ -3347,7 +3437,7 @@ if (configured) {
         await setDoc(doc(db, "users", user.uid), {
           name: data.name || user.displayName || "Anonymous",
           photo: user.photoURL || "",
-          learned: data.learned || {}, quizzes: data.quizzes || {}, srs: data.srs || {},
+          learned: data.learned || {}, quizzes: data.quizzes || {}, srs: data.srs || {}, pron: data.pron || {},
           stat_learned: data.stat_learned || 0,
           stat_quizzes: data.stat_quizzes || 0,
           stat_mastered: data.stat_mastered || 0,
