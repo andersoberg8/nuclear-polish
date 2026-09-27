@@ -92,7 +92,6 @@ const COMMON_WORDS = [
   ["czarny",                               "black",                                      "⚫"],
   ["czas podróży",                         "travel time"],
   ["czasem",                               "sometimes"],
-  ["czasu",                                "time (genitive)"],
   ["czemu",                                "why / what for"],
   ["czerwony",                             "red",                                        "🔴"],
   ["Cześć",                                "Hi / Bye (informal)",                        "👋",     "greetings"],
@@ -130,7 +129,6 @@ const COMMON_WORDS = [
   ["dwadzieścia",                          "20",                                         "2️⃣0️⃣",   "numbers"],
   ["dwanaście",                            "12",                                         "1️⃣2️⃣",   "numbers"],
   ["dwieście",                             "200",                                        "2️⃣0️⃣0️⃣", "numbers"],
-  ["dzieci",                               "children",                                   "👧👦"],
   ["Dzień dobry",                          "Good morning / Good day",                    "🌅👋",   "phrase"],
   ["dziesięć",                             "10",                                         "🔟",     "numbers"],
   ["dziewięć",                             "9",                                          "9️⃣",     "numbers"],
@@ -167,7 +165,6 @@ const COMMON_WORDS = [
 
   // — I —
   ["i",                                    "and"],
-  ["ich",                                  "their"],
   ["ile",                                  "how much / how many",                        "🔢❓"],
   ["Ile to kosztuje?",                     "How much is it?",                            "💲❓",   "phrase"],
   ["inny",                                 "other"],
@@ -183,8 +180,6 @@ const COMMON_WORDS = [
   ["jądrowy",                              "nuclear",                                    "⚛️",     "nuclear"],
   ["jeden",                                "1",                                          "1️⃣",     "numbers"],
   ["jedenaście",                           "11",                                         "1️⃣1️⃣",   "numbers"],
-  ["jego",                                 "his"],
-  ["jej",                                  "her"],
   ["jeszcze",                              "still / yet"],
   ["jeszcze nie",                          "not yet"],
   ["jeśli",                                "if (casual)"],
@@ -220,7 +215,6 @@ const COMMON_WORDS = [
   ["lewy",                                 "left (side) / fake/illegal",                 "👈"],
   ["lista kontrolna",                      "checklist",                             "f", "☑️📋",   "nuclear"],
   ["lub",                                  "or (formal)"],
-  ["ludzie",                               "people",                                     "👥"],
 
   // — Ł —
   ["ładny",                                "pretty",                                     "✨"],
@@ -238,7 +232,6 @@ const COMMON_WORDS = [
   ["mokry",                                "wet",                                        "💦"],
   ["może",                                 "maybe"],
   ["możliwy",                              "possible"],
-  ["mój",                                  "my"],
   ["my",                                   "we"],
   ["myślę, że",                            "I think"],
   ["myślę, że nie",                        "I don't think so"],
@@ -251,7 +244,9 @@ const COMMON_WORDS = [
   ["najlepiej",                            "best"],
   ["najpierw",                             "first / at first"],
   ["następny",                             "next",                                       "⏭️"],
-  ["nasz / nasza / nasze",                 "our"],
+  ["nasza",                                "our (nom, fem, singular subject)"],
+  ["nasze",                                "our (nom, neut, singular subject)"],
+  ["nasz",                                 "our (nom, masc, singular subject)"],
   ["naturalny",                            "natural",                                    "🌿"],
   ["nawet",                                "even"],
   ["Nazywam się…",                         "My name is…",                                "👤🏷️",   "phrase"],
@@ -369,7 +364,6 @@ const COMMON_WORDS = [
   ["Stop!",                                "Stop!",                                      "🛑",     "nuclear"],
   ["stopnie",                              "degrees",                                    "🌡️",     "weather"],
   ["suchy",                                "dry",                                        "🏜️",     "weather"],
-  ["swój",                                 "one's own"],
   ["szary",                                "gray",                                       "🩶"],
   ["szeroki",                              "wide",                                       "↔️"],
   ["szesnaście",                           "16",                                         "1️⃣6️⃣",   "numbers"],
@@ -380,7 +374,6 @@ const COMMON_WORDS = [
   ["szybki",                               "fast",                                       "🚀"],
 
   // — Ś —
-  ["słońca",                               "sun",                                        "☀️",     "weather"],
   ["średnie",                              "medium",                                               "weather"],
   ["świeży",                               "fresh",                                      "🥬"],
 
@@ -411,7 +404,6 @@ const COMMON_WORDS = [
   ["trzysta",                              "300",                                        "3️⃣0️⃣0️⃣", "numbers"],
   ["tu / tutaj",                           "here",                                       "📍"],
   ["twardy",                               "hard",                                       "🪨"],
-  ["twój",                                 "your"],
   ["ty",                                   "you (singular)",                             "👉"],
   ["tygodnie (2,3,4) / tygodni",           "weeks"],
   ["tylko",                                "only"],
@@ -425,7 +417,6 @@ const COMMON_WORDS = [
   ["w",                                    "in"],
   ["w chwili widarzenie",                  "at the time of the event"],
   ["warunki",                              "conditions",                                           "weather"],
-  ["wasz",                                 "your (plural)"],
   ["ważny",                                "important",                                  "❗"],
   ["wąski",                                "narrow"],
   ["wcześniej",                            "early"],

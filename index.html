@@ -584,6 +584,13 @@
         <label>Cases <span class="fc-tag-hint">— one card per form, e.g. Genitive · Singular of "reactor" → reaktora</span></label>
         <div class="wl-filters" id="fcCasetypes"></div>
       </div>
+      <div class="fc-field" id="fcPossField">
+        <label>Possessive cards <span class="fc-tag-hint">— every form of mój, twój, swój, nasz, wasz, e.g. Genitive · Feminine of "my" → mojej</span></label>
+        <div class="seg" id="fcPossCards">
+          <button data-posscards="word" class="on">Word only</button>
+          <button data-posscards="case">All forms</button>
+        </div>
+      </div>
       <div class="fc-field">
         <label>Show first</label>
         <div class="seg" id="fcDir">
@@ -1002,11 +1009,11 @@
     <p>The italic guides are rough English approximations. Polish stress almost always falls on the
       second-to-last syllable. Use the 🔊 button for the real thing.</p>
     <h3>Publish it for your team</h3>
-    <p>The app is four files that live side by side: <code>index.html</code> (the app), <code>words.js</code>
+    <p>The app is a handful of files that live side by side: <code>index.html</code> (the app), <code>words.js</code>
       (your editable vocabulary bank), <code>verbs.js</code> (your editable verb bank) and <code>nouns.js</code>
-      (your editable noun declension bank). To put it online for free
+      (your editable noun declension bank), plus <code>possessives.js</code> (my, your, our… with every form) and <code>pimsleur.js</code> (audio units). To put it online for free
       with GitHub Pages: create a new public repository,
-      upload <strong>all four</strong> — <code>index.html</code>, <code>words.js</code>, <code>verbs.js</code> and <code>nouns.js</code> — then in
+      upload <strong>all of them</strong> — <code>index.html</code>, <code>words.js</code>, <code>verbs.js</code>, <code>nouns.js</code>, <code>possessives.js</code> and <code>pimsleur.js</code> — then in
       <em>Settings → Pages</em> set the source to your main branch. Your team gets a public URL like
       <code>https://yourname.github.io/nuclear-polish/</code>. See <code>How to publish and share.md</code> for the
       full walkthrough.</p>
@@ -1045,6 +1052,7 @@
 <script src="words.js"></script>
 <script src="verbs.js"></script>
 <script src="nouns.js"></script>
+<script src="possessives.js"></script>
 <script src="pimsleur.js"></script>
 <script>
 /* ---------------- COURSE DATA ---------------- */
@@ -1155,6 +1163,12 @@ function load(){
     ["common:"+n.nom.toLowerCase(),"nounword:"+n.nom].forEach(o=>{
       if(s.srs[o]){ if(!s.srs[k]) s.srs[k]=s.srs[o]; delete s.srs[o]; }
     });
+  });
+  // one-time migration: possessives moved from words.js into possessives.js
+  // keep their review history on the possessive's word card.
+  (typeof POSSESSIVE_BANK!=="undefined" ? POSSESSIVE_BANK : []).forEach(p=>{
+    const o="common:"+p.nom.toLowerCase(), k="posword:"+p.nom;
+    if(s.srs[o]){ if(!s.srs[k]) s.srs[k]=s.srs[o]; delete s.srs[o]; }
   });
   return s;
 }
@@ -1357,7 +1371,7 @@ function finishQuiz(){
 
 /* ---------------- FLASHCARDS + SPACED REPETITION ---------------- */
 const DAY = 86400000;
-const fc = { dir:"en", mode:"due", deck:"all", tagmode:"all", tags:[], verbcards:"word", ctypes:[], nouncards:"word", casetypes:[], nounnum:"both", limitType:"none", cardCount:20, timeMin:5 };
+const fc = { dir:"en", mode:"due", deck:"all", tagmode:"all", tags:[], verbcards:"word", ctypes:[], nouncards:"word", casetypes:[], nounnum:"both", posscards:"word", limitType:"none", cardCount:20, timeMin:5 };
 const CARD_OPTS=[10,20,30,50,100], TIME_OPTS=[3,5,10,15];
 let session = null;
 
@@ -1501,6 +1515,31 @@ function buildAllCards(){
       });
     });
   });
+  // Possessives from possessives.js: a word card for every entry ("my" → mój)
+  // plus one card PER FORM for the ones that decline ("Genitive · Feminine —
+  // my" → mojej). Columns: masculine, feminine, neuter, men pl., other pl.
+  // The masculine nominative is the word card, so it gets no separate form card.
+  (typeof POSSESSIVE_BANK!=="undefined" ? POSSESSIVE_BANK : []).forEach((p,i)=>{
+    const extra = splitMeta(p.tags||[]);
+    const pemoji = extra.emoji || p.emoji || "";
+    const pnote = extra.note || p.note || "";
+    out.push({key:"posword:"+p.nom, lid:"possessives", i, w:[p.nom,plPronounce(p.nom),p.en],
+      tags:["possessive"].concat(extra.tags), gender:null, emoji:pemoji, note:pnote,
+      poss:p, pkind:"word", isBase:true, base:p.nom});
+    const d = p.decl||{};
+    const order = CASE_TYPES.map(t=>t[0]).concat(Object.keys(d).filter(k=>!CASE_LABEL[k]));
+    order.forEach(k=>{
+      if(!Array.isArray(d[k]) || !d[k].length) return;
+      d[k].forEach((f,col)=>{
+        if(!f || f==="—") return;
+        if(k==="nom" && col===0) return;
+        out.push({key:"poscase:"+p.nom+":"+k+":"+col, lid:"possessives", i, w:[p.nom,plPronounce(p.nom),p.en],
+          tags:["possessive","declension"].concat(extra.tags), gender:POSS_COL_GENDER[col]||null, emoji:pemoji, note:pnote,
+          poss:p, pkind:"case", pcase:k, pcol:col, cform:f,
+          isBase:false, base:p.nom});
+      });
+    });
+  });
   return out;
 }
 // Every distinct tag used across the vocabulary, with how many words carry it,
@@ -1515,6 +1554,7 @@ function lessonLabel(lid){
   if(lid==="common") return "Common words";
   if(lid==="verbs") return "Verbs";
   if(lid==="nouns") return "Nouns";
+  if(lid==="possessives") return "Possessives";
   const l=LESSONS.find(x=>x.id===lid);
   return l ? l.title.replace(/^\d+ · /,"") : lid;
 }
@@ -1551,6 +1591,8 @@ function renderFcSetup(){
     common:nOf(c=>c.lid==="common"),
     verbs:nOf(c=>c.lid==="verbs"),
     nouns:nOf(c=>c.lid==="nouns"),
+    possessives:nOf(c=>c.lid==="possessives"),
+    pword:nOf(c=>c.pkind==="word"), pcase:nOf(c=>c.pkind==="case"),
     vword:nOf(c=>c.vkind==="word"),   vconj:nOf(c=>c.vkind==="conj"),
     nword:nOf(c=>c.casek==="nom"&&c.nx===0), ncase:nOf(c=>c.nkind==="case"),
     nsg:nOf(c=>c.nkind==="case"&&c.nx===0),  npl:nOf(c=>c.nkind==="case"&&c.nx===1),
@@ -1558,7 +1600,7 @@ function renderFcSetup(){
   const withN=(label,n)=>`${label} <span class="seg-n">${n}</span>`;
   // deck segmented control
   const deckBox=document.getElementById("fcDeck"); deckBox.innerHTML="";
-  const decks=[["all","All words"],["common","Common words"],["verbs","Verbs"],["nouns","Nouns"]];
+  const decks=[["all","All words"],["common","Common words"],["verbs","Verbs"],["nouns","Nouns"],["possessives","Possessives"]];
   decks.forEach(([id,label])=>{
     const b=document.createElement("button"); b.innerHTML=withN(label,cnt[id]); b.dataset.deck=id;
     if(id===fc.deck) b.classList.add("on");
@@ -1584,6 +1626,13 @@ function renderFcSetup(){
     b.innerHTML=withN(k==="both"?"Both":k==="sg"?"Singular":"Plural",
       k==="both"?cnt.ncase:k==="sg"?cnt.nsg:cnt.npl);
   });
+  document.querySelectorAll("#fcPossCards button").forEach(b=>{
+    const k=b.dataset.posscards;
+    b.innerHTML=withN(k==="word"?"Word only":"All forms", k==="word"?cnt.pword:cnt.pword+cnt.pcase);
+  });
+  syncSeg("fcPossCards","posscards",fc.posscards);
+  const pf=document.getElementById("fcPossField");
+  if(pf) pf.style.display = (fc.deck==="all"||fc.deck==="possessives") ? "" : "none";
   // the verb-cards toggle only matters when the pool can contain verbs
   const vf=document.getElementById("fcVerbField");
   if(vf) vf.style.display = (fc.deck==="all"||fc.deck==="verbs") ? "" : "none";
@@ -1745,6 +1794,10 @@ function deckCards(){
     const want = fc.nounnum==="sg" ? 0 : 1;
     cards = cards.filter(c=>!c.nkind || c.nx===want);
   }
+  // Possessive cards toggle: word cards only, or word cards plus every form
+  if(fc.posscards==="word"){
+    cards = cards.filter(c=>c.pkind!=="case");
+  }
   // Case filter: keep chosen cases (empty selection = all)
   if(fc.casetypes && fc.casetypes.length){
     cards = cards.filter(c=>!c.casek || fc.casetypes.includes(c.casek));
@@ -1847,6 +1900,9 @@ const CASE_TYPES=[
 ];
 const CASE_LABEL=Object.fromEntries(CASE_TYPES);
 const NUM_LABEL=["Singular","Plural"];
+// The five columns of a possessive's case table in possessives.js.
+const POSS_COL_LABEL=["Masculine","Feminine","Neuter","Plural (men / mixed)","Plural (other)"];
+const POSS_COL_GENDER=["m","f","n","m",null];
 // Normalized conjugation map — also understands the old verbs.js format
 // (top-level present/future), so nothing breaks mid-upgrade.
 function verbConj(v){
@@ -1891,7 +1947,7 @@ function showCard(){
   // per-form conjugation/case cards ignore direction: the question is
   // English only, the answer is that single Polish form. dir "en" so the
   // speaker sits on the answer face.
-  const dir = (card.ctype||card.casek) ? "en" : curDir(); session.curDir=dir;
+  const dir = (card.ctype||card.casek||card.pcase) ? "en" : curDir(); session.curDir=dir;
   const cardEl=document.getElementById("fcCard");
   cardEl.classList.remove("flipped");
   document.getElementById("fcGrade").classList.remove("hidden");
@@ -1913,6 +1969,13 @@ function showCard(){
     back.side=lbl; back.term=card.cform;
     back.pr=card.cform.split("/").map(plPronounce).join(" / ");
   }
+  if(card.pcase){
+    // possessive form card: "Genitive · Feminine — my" → "mojej"
+    const lbl=(CASE_LABEL[card.pcase]||card.pcase)+" · "+(POSS_COL_LABEL[card.pcol]||"");
+    front.side=lbl; front.term=card.poss.en; front.pr="";
+    back.side=lbl; back.term=card.cform;
+    back.pr=card.cform.split("/").map(plPronounce).join(" / ");
+  }
   // gender color + label on whichever face shows the Polish word
   const frontFace=cardEl.querySelector(".front"), backFace=cardEl.querySelector(".back");
   ["gm","gf","gn"].forEach(c=>{ frontFace.classList.remove(c); backFace.classList.remove(c); });
@@ -1920,7 +1983,7 @@ function showCard(){
     const plFace = dir==="pl" ? frontFace : backFace;
     plFace.classList.add("g"+card.gender);
     // case cards keep their case label; the color alone shows the gender
-    if(!card.casek && !card.ctype) (dir==="pl" ? front : back).side = GENDER_PL[card.gender];
+    if(!card.casek && !card.ctype && !card.pcase) (dir==="pl" ? front : back).side = GENDER_PL[card.gender];
   }
   document.getElementById("fcFrontSide").textContent=front.side;
   document.getElementById("fcFront").textContent=front.term;
@@ -1954,7 +2017,7 @@ function showCard(){
   const frontSpk=document.getElementById("fcFrontSpeak"), backSpk=document.getElementById("fcBackSpeak");
   frontSpk.classList.toggle("hidden", dir!=="pl");
   backSpk.classList.toggle("hidden", dir!=="en");
-  const speakText = (card.ctype||card.casek) ? card.cform.replace(/\//g,", ")
+  const speakText = (card.ctype||card.casek||card.pcase) ? card.cform.replace(/\//g,", ")
                    : vb ? vb.imp+(vb.prf ? ", "+vb.prf : "") : pl;
   const speakPolish=(e)=>{ e.stopPropagation(); speak(speakText); };
   frontSpk.onclick=speakPolish; backSpk.onclick=speakPolish;
@@ -2069,6 +2132,7 @@ function renderWords(){
     let form="";
     if(c.ctype) form=(CONJ_LABEL[c.ctype]||c.ctype)+" · "+FC_PERSONS[c.pix];
     else if(c.casek) form=(CASE_LABEL[c.casek]||c.casek)+" · "+(NUM_LABEL[c.nx]||"");
+    else if(c.pcase) form=(CASE_LABEL[c.pcase]||c.pcase)+" · "+(POSS_COL_LABEL[c.pcol]||"");
     return {idx, pl, pr:c.cform?plPronounce(c.cform.split("/")[0]):c.w[1], en:c.w[2],
       lesson:lessonLabel(c.lid),
       tags:c.tags||[],
